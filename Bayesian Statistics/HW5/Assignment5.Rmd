@@ -1,0 +1,310 @@
+---
+title: "STAT 578 - Fall 2019 - Assignment 5"
+author: "Frederick (Eric) Ellwanger - fre2"
+date: "November 23, 2019"
+output:
+  pdf_document: default
+  html_document: 
+    toc: yes
+urlcolor: cyan
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits=3)
+options(scipen = 999)
+```
+
+## Exercise 1  
+```{r}
+ozoneAQI <- read.table("ozoneAQIaug.txt", header=TRUE)
+```
+
+
+
+#### **(a) Let $\hat{\beta}_1^{(j)}$ and $\hat{\beta}_2^{(j)}$ be the *ordinary least squares* estimates of $\beta_1^{(j)}$ and $\beta_2^{(j)}$, estimated for city j. (The coeffcients are estimated completely separately for each city.)**
+
+**(a)(i) Produce a scatterplot of the pairs $(\hat{\beta}_1^{(j)}, \hat{\beta}_2^{(j)})$, j = 1,..., 15.**  
+```{r fig.height=6, fig.width=8}
+betahat <- matrix(NA, nrow(ozoneAQI), 2)
+for(j in 1:nrow(ozoneAQI)){
+  betahat[j,] <- lsfit(cbind(1:31) - mean(1:31), t(log(ozoneAQI[j,])))$coef
+}
+plot(betahat[,2] ~ betahat[,1], 
+     main = expression(paste("Scatterplot of ", hat(beta)[1]^(j), "and ", hat(beta)[2]^(j))),
+     xlab = expression(hat(beta)[1]^(j)), ylab = expression(hat(beta)[2]^(j)))
+```  
+
+**(a)(ii) Compute the average (sample mean) of $\hat{\beta}_1^{(j)}$ and also of $\hat{\beta}_2^{(j)}$.**  
+```{r}
+(bmean = apply(betahat, 2, mean))
+```  
+mean of $\hat{\beta}_1^{(j)} \approx$ `r bmean[1]`  
+mean of $\hat{\beta}_2^{(j)} \approx$ `r bmean[2]`  
+
+**(a)(iii) Compute the sample variance of $\hat{\beta}_1^{(j)}$ and also of $\hat{\beta}_2^{(j)}$.** 
+```{r}
+(vmean = var(betahat))
+```  
+variance of $\hat{\beta}_1^{(j)} \approx$ `r vmean[1,1]`  
+variance of $\hat{\beta}_2^{(j)} \approx$ `r vmean[2,2]`  
+
+**(a)(iv) Compute the sample correlation between $\hat{\beta}_1^{(j)}$ and $\hat{\beta}_2^{(j)}$.**  
+```{r}
+(bcor = cor(betahat[,1], betahat[,2]))
+```  
+sample correlation between $\hat{\beta}_1^{(j)}$ and $\hat{\beta}_2^{(j)} \approx$ `r bcor`
+
+**(b)(i) List an appropriate JAGS model. Make sure to create nodes for $\sum_\beta$, $\rho$, and $\sigma_y^2$. Remember that the ozone AQI values are to be analyzed on the log scale. Now run your model using rjags. Make sure to use multiple chains with overdispersed starting points, check convergence, and monitor $\mu_\beta$, $\sum_\beta$, $\sigma_y^2$, $\rho$ (after convergence) long enough to obtain effective sample sizes of at least 4000 for each parameter.**
+
+```
+data {
+   dimY <- dim(logozone)
+   daycent <- day - mean(day)
+}
+
+model {
+   for (j in 1:dimY[1]) {
+      for (i in 1:dimY[2]) {
+         logozone[j,i] ~ dnorm(beta[1,j] + beta[2,j]*daycent[i], sigmasqyinv)
+      }
+      beta[1:2,j] ~ dmnorm(mubeta, Sigmabetainv)
+   }
+
+   mubeta ~ dmnorm(mubeta0, Sigmamubetainv)
+   Sigmabetainv ~ dwish(2*Sigma0, 2)
+   sigmasqyinv ~ dgamma(0.0001, 0.0001)
+   Sigmabeta <- inverse(Sigmabetainv)
+   rho <- Sigmabeta[1,2] / sqrt(Sigmabeta[1,1] * Sigmabeta[2,2])
+   sigmasqy <- 1/sigmasqyinv
+}
+```
+
+```{r}
+ozone = read.table("ozoneAQIaug.txt", header = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE, fig.height=10, fig.width=8}
+library(rjags)
+d1 <- list(logozone = log(ozone[,c(1:31)]), day = c(1:31), mubeta0 = c(0, 0),
+           Sigmamubetainv = rbind(c(1/1000^2, 0), c(0, 1/1000^2)),
+           Sigma0 = rbind(c(0.1, 0), c(0, 0.001)))
+#Set overdispersed starting points 
+inits1 <- list(list(sigmasqyinv = 100, mubeta = c(100, 1), 
+                    Sigmabetainv = rbind(c(100, 0), c(0, 100))),
+               list(sigmasqyinv = 0.001, mubeta = c(-100, 1),
+                    Sigmabetainv = rbind(c(100, 0), c(0, 100))),
+               list(sigmasqyinv = 100, mubeta = c(100, -1),
+                    Sigmabetainv = rbind(c(0.001, 0), c(0, 0.001))),
+               list(sigmasqyinv = 0.001, mubeta = c(-100, -1),
+                    Sigmabetainv = rbind(c(0.001, 0),c(0, 0.001))))
+#Setup model
+m1 <- jags.model("ozone1.bug", d1, inits1, n.chains=4, n.adapt=2000)
+#Burn-in
+update(m1, 20000)
+#Run model
+x1 <- coda.samples(m1, c("mubeta[1]","mubeta[2]","Sigmabeta[1,1]","Sigmabeta[1,2]",
+                   "Sigmabeta[2,2]","sigmasqy","rho"), n.iter=2000)
+#Check for convergence
+plot(x1, smooth = FALSE)
+```
+
+```{r}
+#Another check for convergence
+gelman.diag(x1, autoburnin=FALSE, multivariate=FALSE)
+```
+
+```{r}
+#Another check for convergence and Neff > 4000/parameter
+effectiveSize(x1[,c("mubeta[1]","mubeta[2]","Sigmabeta[1,1]","Sigmabeta[1,2]",
+                    "Sigmabeta[2,2]","sigmasqy","rho")])
+```
+
+**There does not appear to be any issues with convergance and all monitored parameters exceed an effective sample size of 4000**
+
+
+**(b)(ii) Display the coda summary of the results for the monitored parameters.**  
+```{r}
+(x1sum = summary(x1))
+```  
+
+**(b)(iii) Give an approximate 95% central posterior credible interval for the correlation parameter $\rho$, and also produce a graph of its (estimated) posterior density.**  
+```{r}
+(rhostats = x1sum$quantiles["rho", c("2.5%", "97.5%")])
+```  
+**The 95% central posterior credible interval, for $\rho$ is (`r rhostats[1]`, `r rhostats[2]`)**
+
+```{r}
+densplot(x1[,"rho"], main = expression(paste("Density of ", rho)))
+```
+
+
+**(b)(iv) Approximate the posterior probability that $\rho$ > 0. Also, compute the Bayes factor favoring $\rho$ > 0 versus $\rho$ < 0. (You may use the fact that $\rho$ > 0 and $\rho$ < 0 have equal prior probability.) Describe the level of data evidence that $\rho$ > 0.**  
+```{r}
+rho.sim = as.matrix(x1)[, "rho"]
+mean(rho.sim > 0)
+```  
+**The approximate posterior probability that $\rho>0 \approx$ `r mean(rho.sim > 0)`**
+
+```{r}
+#Since PR_prior_h1 = PR_prior_h2 we divide by 1
+(BF = (mean(rho.sim > 0)/mean(rho.sim < 0))/1)
+```  
+**The Bayes Factor is approximately `r BF`. This is below 1 on the Bayes Factor scale, actually suggesting slight evidence to support that $\rho < 0$**
+
+**(b)(v) Your model implies that, over the 30-day period from the first day of August to the last, the (population) median ozone AQI value should have changed by a factor of:**
+
+**$e^{30\mu_{\beta2}}$**
+
+**Form an approximate 95% central posterior credible interval for this quantity.**  
+
+```{r}
+(mu2q = exp(30*x1sum$quantiles["mubeta[2]", c("2.5%", "97.5%")]))
+```  
+**The 95% central posterior credible interval, for this quantity is (`r mu2q[1]`, `r mu2q[2]`)**
+
+
+**(b)(vi) Use the rjags function dic.samples to compute the effective number of parameters ("penalty") and Plummer's DIC ("Penalized deviance"). Use at least 100,000 iterations.**  
+```{r message=FALSE, warning=FALSE}
+#Find Effective No Parameters and Plummrs Deviance
+load.module("dic")
+(dev1 = dic.samples(m1, 100000))
+```   
+**Effective # of parameters $\approx$ `r sum(dev1$penalty)` **  
+**Penalized deviance is $\approx$ `r sum(dev1$deviance)`**
+
+
+**(c) Now consider a different model with "univariate" hyperpriors for the model coeffcients, which
+do not allow for a coeffcient correlation parameter.**    
+
+**(c)(i) Draw a complete DAG for this new model.**  
+![](\Users\frell\Documents\GitHub\Stat578\HW5\univariate_dag.jpg)
+
+**(ii) List an appropriate JAGS model. Make sure that there are nodes for $\sigma_{\beta_1}^2$, 
+$\sigma_{\beta_2}^2$, and $\sigma_y^2$.**  
+
+```
+data {
+   dimY <- dim(logozone)
+   daycent <- day - mean(day)
+}
+
+
+model {
+   for (j in 1:dimY[1]) {
+      for (i in 1:dimY[2]) {
+         logozone[j,i] ~ dnorm(beta[1,j] + beta[2,j]*daycent[i], sigmasqyinv)
+      }
+      beta[1,j] ~ dnorm(mubeta1, 1/(Sigmabeta1^2))
+      beta[2,j] ~ dnorm(mubeta2, 1/(Sigmabeta2^2))
+   }
+
+   mubeta1 ~ dnorm(0, 1/(1000^2)) 
+   mubeta2 ~ dnorm(0, 1/(1000^2))
+   Sigmabeta1 ~ dunif(0, 1000)
+   Sigmabeta2 ~ dunif(0, 1000)
+   sigmasqyinv ~ dgamma(0.0001, 0.0001)
+   
+   Sigmasqbeta1 <- Sigmabeta1^2
+   Sigmasqbeta2 <- Sigmabeta2^2
+   sigmasqy <- 1/sigmasqyinv
+}
+```
+
+**Remember that the ozone AQI values are to be analyzed on the log scale.**  
+```{r}
+d2 <- list(logozone = log(ozone[,c(1:31)]), day = c(1:31))
+```
+
+
+**Now run your model using rjags. Make sure to use multiple chains with overdispersed starting points, check convergence, and monitor $\mu_{\beta_1}$, $\mu_{\beta_2}$, $\sigma_{\beta_1}^2$, $\sigma_{\beta_2}^2$, and $\sigma_y^2$ (after convergence) long enough to obtain effective sample sizes of at least 4000 for each parameter.**  
+```{r fig.height=10, fig.width=8}
+
+#Set overdispersed starting points 
+inits2 <- list(list(sigmasqyinv = 100, mubeta1 = 100, mubeta2 = -1,
+                    Sigmabeta1 = 100, Sigmabeta2 = 100),
+               list(sigmasqyinv = 0.001, mubeta1 = -100, mubeta2 = 1, 
+                    Sigmabeta1 = 100, Sigmabeta2 = 100),
+               list(sigmasqyinv = 100, mubeta1 = 100, mubeta2 = 1,
+                    Sigmabeta1 = 0.001, Sigmabeta2 = 0.001),
+               list(sigmasqyinv = 0.001, mubeta1 = -100, mubeta2 = -1,
+                    Sigmabeta1 = 0.001, Sigmabeta2 = 0.001))
+#Setup model
+m2 <- jags.model("ozone2.bug", d2, inits2, n.chains=4, n.adapt=1000)
+
+#Burn-in
+update(m2, 60000)
+x2 <- coda.samples(m2, c("mubeta1","mubeta2", "Sigmasqbeta1","Sigmasqbeta2", "sigmasqy"),
+                   n.iter=25000)
+
+#Check convergence
+plot(x2)
+```  
+
+```{r}
+#Another check for convergence
+gelman.diag(x2, autoburnin=FALSE, multivariate=FALSE)
+```
+
+```{r}
+#Another check for convergence and Neff > 4000/parameter
+effectiveSize(x2[,c("mubeta1","mubeta2", "Sigmasqbeta1","Sigmasqbeta2", "sigmasqy")])
+```
+
+**There does not appear to be any issues with convergance and all monitored parameters exceed an effective sample size of 4000**
+
+
+
+**(c)(iii) Display the coda summary of the results for the monitored parameters.**
+```{r}
+(sum2 = summary(x2))
+```  
+
+**(c)(iv) Recall the (population) median ozone AQI change factor $e^{30\mu_{\beta_2}}$ considered in the previous analysis. Form an approximate 95% central posterior credible interval for this quantity, and compare it with the previous results.**  
+```{r}
+(q95 = exp(sum2$quantiles["mubeta2", c("2.5%", "97.5%")]))
+```  
+**The 95% central posterior credible interval for this qty is $\approx$ (`r q95[1]`, `r q95[2]`)**
+
+**This interval is much tighter than the interval from the previous results, and it is slightly higher than the previous results.**
+
+
+**(c)(v) Use the rjags function dic.samples to compute the effective number of parameters ("penalty") and Plummer's DIC ("Penalized deviance"). Use at least 100,000 iterations. **  
+```{r}
+(dev2 = dic.samples(m2, 100000))
+```
+**Effective # of parameters $\approx$ `r sum(dev2$penalty)`**  
+**Penalized deviance is $\approx$ `r sum(dev2$deviance)`**  
+
+
+**(c)(vi) Compare the (Plummer's) DIC values for this model and the previous one. Which is preferred?**  
+```{r}
+if((sum(dev1$deviance) - sum(dev2$deviance)) > 0){
+  winner = "Part C Model"
+}else{
+  winner = "Part B Model"
+}
+```  
+**The model with the lowest DIC is preffered, therefore `r winner` is preffered, but there is only a small difference between the 2 models.**  
+
+
+**(d)(i) It is possible that the variability in log-value depends on the city. How might you modify your model to account for this? Would your solution need more hyperparameters?**  
+
+*In order to have the model variance of the log-value depend on the city, $\sigma_y$ would need to be on the j plate. We would need to give it's distribution hyperparameters.We could give $\sigma_y^{(j)}$ an non-informative hyperprior with a normal distribution with mean 0 and uniform standard deviation. $\sigma_y^{(j)} \sim N(0, \sigma_{yj}^2)$ where $\sigma_{yj} \sim U(0, \infty)$*
+
+
+
+**(d)(ii) It is possible that there are time-series correlations in the successive log-values of each city that are not captured by the simple linear regression model. What specific model assumption would this violate? (Is i or j involved?)**  
+
+*This would violate the independance and exchangeability asumption of the response values within a city. If there was correlations not captured by the simple linear regression model, the individual data values will not be conditionally iid and they would also not be exchangeable.Since this effects the responses within a city, i would be involved*
+
+
+
+**(d)(iii) It is possible that there are spatial correlations among the log-values on a given day that are not captured by the simple linear regression model (because some cities are closer to each other than others). What specific model assumption would this violate? (Is i or j involved?)**  
+
+*This would violate the assumption that the $\beta_j's$ are iid and exchangeable. If there was some spatial correlation between the reponses between 2 cities that is not captured in the simple linear regression model, the $\beta_j's$ would no longer be iid or exchangeable. Since this effects the the responses between cities, j would be involved*
+
+
+
+

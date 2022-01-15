@@ -1,0 +1,215 @@
+---
+title: "STAT 578 - Fall 2019 - Assignment 2"
+author: "Frederick (Eric) Ellwanger - fre2"
+date: "September 28, 2019"
+output:
+  html_document: 
+    toc: yes
+  pdf_document: default
+urlcolor: cyan
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits=3)
+options(scipen = 999)
+```
+## Excersise 1
+
+#### 1. Consider the two different hyperprior formulations for the binomial hierarchical model of Lesson 3.2: Hierarchical Modeling Fundamentals. This exercise shows how different those priors are.  
+
+#### **(1)(a)** The first prior formulation was:  
+\begin{align*}
+\theta_j | \alpha, \beta \sim Beta(\alpha, \beta) \\  
+\alpha, \beta \sim iid \hspace{2 mm} Expon(0.001)
+\end{align*}
+
+
+#### **(1)(a)(i)** Independently simulate 1000 pairs ($\alpha, \beta$) from their hyperprior, and produce a scatterplot of log($\beta$) versus log($\alpha$).  
+```{r}
+set.seed(19690223)
+
+#Simulate 1000 draws of alpha and beta
+alpha = rexp(1000, rate = 0.001)
+beta = rexp(1000, rate = 0.001)
+
+plot(log(alpha), log(beta), ylab = bquote("log("~beta~")"), xlab = bquote("log("~alpha~")"),
+                            main = bquote("Scatter Plot of log("~beta~") vs log("~alpha~")"))
+```  
+
+#### **(1)(a)(ii) Using the simulated pairs ($\alpha$, $\beta$), forward-simulate $\theta_j$ , and produce a histogram of the result (an approximation of its marginal prior).**  
+```{r}
+thetaj = rbeta(1000, alpha, beta)
+hist(thetaj, freq = FALSE, xlab = bquote(theta[j]), main = bquote("Histogram of"~theta[j]))
+```  
+
+#### **(1)(b) The second prior formulation was**  
+\begin{equation}
+\begin{aligned}
+\theta_j | \alpha, \beta \sim Beta(\alpha, \beta) \\
+\alpha = \frac{\phi_1}{\phi_2^2} \hspace{8 mm} \beta = \frac{(1 - \phi_1)}{\phi_2^2} \\
+\phi_1 \sim U(0, 1) \hspace{12mm} \phi_2 \sim U(0, 1000)  
+\end{aligned}
+\end{equation}
+
+#### **(1)(b)(i) Independently simulate 1000 pairs ($\alpha$, $\beta$) from their hyperprior, and produce a scatterplot of log($\beta$) versus log($\alpha$).**  
+```{r}
+set.seed(19690223)
+
+#Simulate 1000 draws of phi1 and phi2
+phi1 = runif(1000, 0, 1)
+phi2 = runif(1000, 0, 1000)
+
+alpha = phi1/phi2^2
+beta = (1 - phi1)/phi2^2
+
+plot(log(alpha), log(beta), ylab = bquote("log("~beta~")"), xlab = bquote("log("~alpha~")"),
+                            main = bquote("Scatter Plot of log("~beta~") vs log("~alpha~")"))
+
+```  
+
+#### **(1)(b)(ii) Using the simulated pairs ($\alpha$, $\beta$), forward-simulate $\theta_j$ , and produce a histogram of the result (an approximation of its marginal prior).**  
+```{r}
+thetaj = rbeta(1000, alpha, beta)
+hist(thetaj, freq = FALSE, xlab = bquote(theta[j]), main = bquote("Histogram of"~theta[j]))
+```  
+
+## Excersise 2
+#### **(2) Consider this Bayesian hierarchical model:**  
+
+\begin{equation}
+\begin{aligned}
+\hat{\psi_j} | \psi_j \sim indep. \mathcal{N}(\psi_j,\sigma_j^{2}) \hspace{8mm} j = 1, ..., 12 \\
+\psi_j | \psi_0, \sigma_0 \sim iid \hspace{4mm} \mathcal{N}(\psi_0,\sigma_0^{2}) \hspace{8mm} j = 1, ..., 12 \\ 
+\psi_0 \sim\ \mathcal{N}(0,1000^{2}) \\
+\sigma_0 \sim U(0, 1000) 
+\end{aligned}
+\end{equation}
+
+#### **(2)(a) Specify improper densities that the proper hyperpriors given above appear to be approximating. (Which parameters are the hyperparameters?)**  
+
+**The hyperparameters are: $\psi_0$ and $\sigma_0$**  
+**The improper densities of the hyperpriors appear to be approximating: **
+\begin{equation}
+\begin{aligned}
+p(\psi_0) \propto 1 \hspace{8mm} (flat \hspace{2mm} on \hspace{2mm} -\infty < \hspace{2mm} \psi_0 \hspace{2mm} < \infty)  \\
+p(\sigma_0) \propto 1 \hspace{8mm} (flat \hspace{2mm} on \hspace{2mm} 0 < \hspace{2mm} \sigma_0 \hspace{2mm} < \infty) 
+\end{aligned}
+\end{equation}
+
+#### **(2)(b) Draw a directed acyclic graph (DAG) appropriate for this model. (Use the notation introduced in lecture, including plates.) You may draw it neatly by hand or use software.**  
+![](/Users/frell/Documents/GitHub/Stat578/HW2/dag1.jpg)
+
+#### **(2)(c) Using the template asgn2template.bug provided on the course website, form a JAGS model statement (corresponding to your graph). Also, set up any R (rjags) statements appropriate for creating a JAGS model. [Remember: JAGS dnorm uses precisions, not variances!]**  
+
+```
+model {
+  for (j in 1:length(psi_hat)) {
+    psi_hat[j] ~ dnorm(psi[j], 1/sigma[j]^2)
+    psi[j] ~ dnorm(psi0, 1/sigmasq0)
+  }
+
+  psi0 ~ dnorm(0, 1/1000^2)
+  sigma0 ~ dunif(0, 1000)
+
+  sigmasq0 <- sigma0^2
+}
+```  
+```{r message=FALSE, warning=FALSE}
+library(rjags)
+d = read.table("asgn2data.txt", header=TRUE)
+m1 = jags.model("asgn2template.bug", d)
+```
+
+
+
+#### **(2)(d)  Run at least 10,000 iterations of burn-in, then 100,000 iterations to use for inference. For both $\psi_0$ and $\sigma_0^2$ (not $\sigma_0$), produce a posterior numerical summary and also graphical estimates of the posterior densities. Explicitly give the approximations of the posterior expected values, posterior standard deviations, and 95% central posterior intervals. (Just showing R output is not enough!)**
+
+```{r message=TRUE}
+update(m1, 10000)   #Burn-in
+
+x1 = coda.samples(m1, c("psi0", "sigmasq0"), n.iter = 100000)
+summary(x1)
+```  
+```{r message=FALSE, warning=FALSE}
+require(lattice)
+densityplot(x1[,c("psi0", "sigmasq0")])
+```
+
+**posterior expected value of $\psi_0 \approx$ `r summary(x1)$statistics["psi0", "Mean"]`**    
+**posterior expected value of $\sigma_0^2 \approx$ `r summary(x1)$statistics["sigmasq0", "Mean"]`**    
+
+**posterior standard deviation of $\psi_0 \approx$ `r summary(x1)$statistics["psi0", "SD"]`**  
+**posterior standard deviation of $\sigma_0^2 \approx$ `r summary(x1)$statistics["sigmasq0", "SD"]`**  
+
+**95% central posterior interval for $\psi_0 \approx$ (`r summary(x1)$quantiles["psi0", "2.5%"]`, `r summary(x1)$quantiles["psi0", "97.5%"]`)**  
+**95% central posterior interval for $\sigma_0^2 \approx$ (`r summary(x1)$quantiles["sigmasq0", "2.5%"]`, `r summary(x1)$quantiles["sigmasq0", "97.5%"]`)** 
+
+
+
+#### **(2)(e) Suppose a new case-control study is to be performed, and assume that its log-odds standard error (new $\sigma$) will be 0.25. Assume the $\psi$ for the new study is exchangeable with those for the previous studies.**  
+
+#### **(2)(e)(i) Re-draw your DAG, adding new nodes to represent the new $\hat{\psi}$ and new $\psi$**  
+![](/Users/frell/Documents/GitHub/Stat578/HW2/dag2.jpg)
+
+
+#### **(2)(e)(ii) Correspondingly modify your JAGS model to answer the following parts. Show the modified JAGS and R code and output that you used.**
+
+```
+model {
+  for (j in 1:length(psi_hat)) {
+    psi_hat[j] ~ dnorm(psi[j], 1/sigma[j]^2)
+    psi[j] ~ dnorm(psi0, 1/sigmasq0)
+  }
+
+  psi0 ~ dnorm(0, 1/1000^2)
+  sigma0 ~ dunif(0, 1000)
+
+  sigmasq0 <- sigma0^2  
+  
+  psi_hat.tilde ~ dnorm(psi.tilde, 1/sigma.tilde^2)
+  psi.tilde ~ dnorm(psi0, 1/sigmasq0)
+  
+  lead.ind = psi_hat.tilde > 2*sigma.tilde
+}
+```  
+
+```{r message=TRUE, warning=FALSE}
+m1mod = jags.model("asgn2templatemod.bug", c(as.list(d), sigma.tilde = 0.25))
+```
+
+
+#### **(2)(e)(iii) Estimate the posterior mean and posterior standard deviation, and form a 95% central posterior predictive interval for the estimated log-odds ratio that the new study will obtain.**  
+```{r}
+update(m1mod, 10000)   #Burn-in
+
+x1mod = coda.samples(m1mod, c("psi_hat.tilde", "lead.ind"), n.iter = 100000)
+summary(x1mod)
+```
+**posterior mean of $\tilde{\hat{\psi}} \approx$ `r summary(x1mod)$statistics["psi_hat.tilde", "Mean"]`**    
+
+**posterior standard deviation of $\tilde{\hat{\psi}} \approx$ `r summary(x1mod)$statistics["psi_hat.tilde", "SD"]`**  
+
+**95% central posterior interval for $\tilde{\hat{\psi}} \approx$ (`r summary(x1mod)$quantiles["psi_hat.tilde", "2.5%"]`, `r summary(x1mod)$quantiles["psi_hat.tilde", "97.5%"]`)**  
+
+#### **(2)(e)(iv) Estimate the posterior predictive probability that the new estimated log-odds ratio will be at least twice its standard error, i.e., at least two standard errors ($2\sigma$) greater than zero. (This is roughly the posterior probability that the new study will find a statistically significant result, and in the positive direction.)** 
+
+**posterior predictive probability $Pr(\tilde{\hat{\psi}} > 2\tilde{\sigma}) \approx$ `r summary(x1mod)$statistics["lead.ind", "Mean"]`**
+
+
+#### **Appendix (Data)**
+```
+j   psi_hat   sigma
+1   1.055     0.373      
+2  -0.097     0.116      
+3   0.626     0.229      
+4   0.017     0.117  
+5   1.068     0.471 
+6  -0.025     0.120  
+7  -0.117     0.220     
+8  -0.381     0.239  
+9   0.507     0.186 
+10  0.000     0.328
+11  0.385     0.206
+12  0.405     0.254
+```

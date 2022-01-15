@@ -1,0 +1,99 @@
+---
+title: "STAT 578 - Fall 2019 - Assignment 4"
+author: "Frederick (Eric) Ellwanger - fre2"
+date: "November 1, 2019"
+output:
+  html_document: 
+    toc: yes
+  pdf_document: default
+urlcolor: cyan
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits=3)
+options(scipen = 999)
+```
+
+```{r}
+ozone = read.table("ozoneAQIaug.txt", header = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE, fig.height=8, fig.width=10}
+library(rjags)
+
+d1 <- list(logozone = log(ozone[,c(1:31)]), day = c(1:31), mubeta0 = c(0, 0),
+           Sigmamubetainv = rbind(c(0.000001, 0), c(0, 0.000001)),
+           Sigma0 = rbind(c(100, 0), c(0, 0.1)))
+
+#Set overdispersed starting points 
+inits1 <- list(list(sigmasqyinv = 10, mubeta = c(1000, 1000), 
+                    Sigmabetainv = rbind(c(100, 0), c(0, 100))),
+               list(sigmasqyinv = 0.001, mubeta = c(-1000, 1000),
+                    Sigmabetainv = rbind(c(100, 0), c(0, 100))),
+               list(sigmasqyinv = 10, mubeta = c(1000, -1000),
+                    Sigmabetainv = rbind(c(0.001, 0), c(0, 0.001))),
+               list(sigmasqyinv = 0.001, mubeta = c(-1000, -1000),
+                    Sigmabetainv = rbind(c(0.001, 0),c(0, 0.001))))
+
+#Setup model
+m1 <- jags.model("ozone1.bug", d1, inits1, n.chains=4, n.adapt=2000)
+
+#Burn-in
+update(m1, 20000)
+
+#Run model
+x1 <- coda.samples(m1, c("mubeta[1]","mubeta[2]","Sigmabeta[1,1]","Sigmabeta[1,2]",
+                   "Sigmabeta[2,2]","sigmasqy","rho"), n.iter=2000)
+
+#Check for convergence
+plot(x1, smooth = FALSE)
+```
+
+```{r}
+#Another check for convergence
+gelman.diag(x1, autoburnin=FALSE, multivariate=FALSE)
+```
+
+```{r}
+#Another check for convergence and Neff > 4000/parameter
+effectiveSize(x1[,c("mubeta[1]","mubeta[2]","Sigmabeta[1,1]","Sigmabeta[1,2]",
+                    "Sigmabeta[2,2]","sigmasqy","rho")])
+```
+
+**There does not appear to be any issues with convergance and all monitored parameters exceed an effective sample size of 4000**
+
+
+**(b)(ii) Display the coda summary of the results for the monitored parameters.**  
+```{r}
+(x1sum = summary(x1))
+```  
+
+**(b)(iii) Give an approximate 95% central posterior credible interval for the correlation parameter $\rho$, and also produce a graph of its (estimated) posterior density.**  
+```{r}
+(rhostats = x1sum$quantiles["rho", c("2.5%", "97.5%")])
+```  
+**The 95% central posterior credible interva, for $\rho$ is (`r rhostats[1]`, `r rhostats[2]`)**
+
+
+**(b)(iv) Approximate the posterior probability that $\rho$ > 0. Also, compute the Bayes factor favoring $\rho$ > 0 versus $\rho$ < 0. (You may use the fact that $\rho$ > 0 and $\rho$ < 0 have equal prior probability.) Describe the level of data evidence that $\rho$ > 0.**  
+```{r}
+rho.sim = as.matrix(x1)[, 6]
+mean(rho.sim > 0)
+```  
+**The approximate posterior probability that $\rho>0 \approx$ `r mean(rho.sim > 0)`**
+
+```{r}
+#Since PR_prior_h1 = PR_prior_h2 we divide by 1
+(BF = (mean(rho.sim > 0)/(1 - mean(rho.sim > 0)))/1)
+```  
+**The Bayes Factor is approximately `r BF`. This is at a barely mentionable level on the Bayes Factor scale, suggesting there isn't much evidence to support that $\rho > 0$**
+
+**(b)(v) Your model implies that, over the 30-day period from the first day of August to the last, the (population) median ozone AQI value should have changed by a factor of:**
+
+**$e^{30\mu_{\beta2}}$**
+
+**Form an approximate 95% central posterior credible interval for this quantity.**  
+
+

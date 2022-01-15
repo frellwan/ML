@@ -1,0 +1,13 @@
+model {
+   for (i in 1:length(blk)) {
+      blk[i] ~ dpois(lambda[i])
+      log(lambda[i]) <- logminutes[i] + beta.p[pos[i]] + beta.ht*htscaled[i]
+      
+	 yrep[i] ~ dpois(lambda[i])
+   }
+   
+   for (j in 1:max(pos)) {
+      beta.p[j] ~ dnorm(0, 1/100^2)
+   }
+   beta.ht ~ dnorm(0, 1/100^2)
+}

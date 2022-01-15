@@ -1,0 +1,11 @@
+model {
+   for(i in 1:length(logT)) {
+      logT[i] ~ dnorm(beta1*x1[i] + beta2*Ycent[i], sigmasqinv)
+   }
+   
+   beta1 ~ dnorm(0, 0.00000001)
+   beta2 ~ dnorm(0, 0.00000001)
+   sigmasqinv ~ dgamma(0.0001, 0.0001)
+   
+   sigmasq = 1/sigmasqinv
+}

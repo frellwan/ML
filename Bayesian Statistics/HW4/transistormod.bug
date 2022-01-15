@@ -1,0 +1,15 @@
+model {
+   for(i in 1:length(logT)) {
+      logT[i] ~ dnorm(beta1 + beta2*Ycent[i], sigmasqinv)
+   }
+   
+   Tnew ~ dnorm(beta1 + beta2*YNewcent, sigmasqinv)
+   
+   beta1 ~ dnorm(0, (1/1000)^2)
+   beta2 ~ dnorm(0, (1/1000)^2)
+   sigmasqinv ~ dgamma(0.001, 0.001)
+   
+   sigmasq = 1/sigmasqinv
+   
+   A0 = mean(Year) - beta1/beta2
+}

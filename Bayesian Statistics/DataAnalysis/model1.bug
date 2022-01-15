@@ -1,0 +1,14 @@
+model {
+   for (i in 1:236) { 
+      for (j in 1:5) {
+	   uses[i, j] ~ dbern(prob[i, j])
+           logit(prob[i, j]) <- beta0 + beta.yr*year.scaled[j] + beta.sex*sex.cent[i]
+
+	   usesrep[i, j] ~ dbern(prob[i, j])	   
+	   }	 
+   }
+
+   beta0 ~ dt(0, 1/(10^2), 1)
+   beta.yr ~ dt(0, 1/(2.5^2), 1)
+   beta.sex ~ dt(0, 1/(2.5^2), 1)
+}

@@ -1,0 +1,328 @@
+---
+title: "STAT 578 - Fall 2019 - Assignment 4"
+author: "Frederick (Eric) Ellwanger - fre2"
+date: "November 1, 2019"
+output:
+  pdf_document: default
+  html_document: 
+    toc: yes
+urlcolor: cyan
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits=3)
+options(scipen = 999)
+```
+
+## Exercise 1
+According to one version of Moore's law, the number of transistors on a state-of-the-art computer microprocessor roughly doubles every two years:  
+\[T \approx C2^{A/2}\]  
+
+#### **(1)(a) Consider the natural logarithm of the number of transistors: log T.**
+
+#### **(1)(a)(i) Demonstrate that, according to Moore's law, log T should roughly follow a simple linear regression on A. Also, what should be the value of the coeffcient of A?**  
+
+$log(T) \approx log(C2^{A/2})$  
+$log(T) \approx log(C) + log(2^{A/2})$  
+$log(T) \approx log(C) + A/2*log(2)$  
+
+**This demonstrates that log(T) roughly follows a simple linear regression of the form:**  
+**$log(T) \approx \beta_1 + \beta_2 A$ where $\beta_1 = log(C)$ and $\beta_2 = \frac{log(2)}{2}$**  
+**The coefficient of A is $\frac{log(2)}{2} \approx$ `r log(2)/2`**  
+
+#### **(1)(a)(ii) Plot the data points as log transistor count versus year.**  
+```{r}
+ml = read.csv("mooreslawdata.csv", header=TRUE)
+plot(log(Transistors) ~ Year, data = ml, 
+     main = "Plot of relationship between log(Transistors) and Year", col = "dodgerblue")
+```  
+
+#### **(1)(b) Consider a normal-theory simple linear regression model of log transistor count on centered year of the form: **  
+
+\[log(T_i)|\beta,\sigma^2,A_i \hspace{2 mm} \sim \hspace{2 mm} indep. N(\beta_1+\beta_2(A_i-\bar{A}),\sigma^2) \hspace{8 mm} i = 1,...,161\]  
+
+where $\bar{A}$ is the avergae of $A_i$ over all observations. Of course, Moore's law specifies a particular value for $\beta_2$, but your initial model will not assume this. Use independent priors  
+\[\beta_1,\beta_2 \hspace{2 mm} \sim \hspace{2 mm} iid N(0, 1000^2)\]  
+\[\sigma^2 \hspace{2 mm} \sim \hspace{2 mm} Inv-gamma(0.001, 0.001)\]  
+
+#### **(1)(b)(i) List an appropriate JAGS model**  
+```{r}
+ml$logT = log(ml$Transistors)
+ml$Ycent = ml$Year - mean(ml$Year)
+```  
+
+```
+model {
+   for(i in 1:length(logT)) {
+      logT[i] ~ dnorm(beta1 + beta2*Ycent[i], sigmasqinv)
+   }
+   
+   beta1 ~ dnorm(0, (1/1000^2))
+   beta2 ~ dnorm(0, (1/1000^2))
+   sigmasqinv ~ dgamma(0.001, 0.001)
+   
+   sigmasq = 1/sigmasqinv
+   }
+}
+```  
+
+```{r message=FALSE, warning=FALSE, fig.height=8, fig.width=10}
+library(rjags)
+
+#Set overdispersed starting points 
+inits = list(list(beta1 = 1700, beta2 = 1700, sigmasqinv = 100),
+             list(beta1 = 1700, beta2 = -1700, sigmasqinv = 0.001),
+             list(beta1 = -1700, beta2 = 1700, sigmasqinv = 0.001),
+             list(beta1 = -1700, beta2 = -1700, sigmasqinv = 100))
+
+#Setup model
+chains = 4
+m1 = jags.model("transistor.bug", ml, inits, n.chains = chains)
+
+#Run burn-in
+update(m1, 2000)
+
+#Run model
+iters = 2500
+x1 = coda.samples(m1, c("beta1", "beta2", "sigmasq"), n.iter = iters)
+
+#Check for convergence
+plot(x1, smooth = FALSE)
+```
+
+**None of the parameter graphs show any concerns with convergence**  
+
+```{r}
+#Another check for problems with convergance
+gelman.diag(x1, autoburnin = FALSE)
+```  
+
+**Gelman-Rubin statistics do not show any issues with convergance**
+
+```{r}
+#Another check for convergance
+effectiveSize(x1)
+```
+
+**The sample sizes are adequate**
+
+```{r}
+#Another check for convergance (just first chain )
+autocorr.plot(x1[[1]])
+```
+
+**Autocorrelation plots do not show any issues with mixing**
+
+**There does not appear to be any issues with convergance**
+
+#### **(1)(b)(ii) List the `coda` summary of your results for $\beta_1$, $\beta_2$, and $\sigma^2$**
+```{r}
+summary(x1)
+```  
+
+
+#### **(1)(b)(iii)Give the approximate posterior mean and 95% posterior credible interval for the slope. Does the interval contain the value you determined in part (a), in accordance with Moore's law?** 
+
+```{r}
+summary(x1)$statistics['beta2','Mean']
+```
+**The approximate posterior mean for the slope is `r summary(x1)$statistics['beta2','Mean']`**  
+
+```{r}
+summary(x1)$quantiles['beta2',c('2.5%', '97.5%')]
+```
+**The approximate 95% posterior credible interval for the slope is (`r summary(x1)$quantiles['beta2','2.5%']`, `r summary(x1)$quantiles['beta2','97.5%']`)**
+
+**This interval does contain the value calculted in part (a) : `r log(2)/2`**
+
+#### **(1)(b)(iv)Give the approximate posterior mean and 95% posterior credible interval for the intercept.**  
+```{r}
+summary(x1)$statistics['beta1','Mean']
+```
+**The approximate posterior mean for the intercept is `r summary(x1)$statistics['beta1','Mean']`**  
+
+```{r}
+summary(x1)$quantiles['beta1',c('2.5%', '97.5%')]
+```
+**The approximate 95% posterior credible interval for the intercept is (`r summary(x1)$quantiles['beta1','2.5%']`, `r summary(x1)$quantiles['beta1','97.5%']`)**  
+
+
+#### **(1)(c) Consider the model of the previous part. You will use it to predict the transistor count on a microprocessor introduced in 2020, and also (just for fun) to see if it extrapolates back to the invention of the transistor.**  
+
+#### **(1)(c)(i) List a modifed JAGS model appropriate for answering the subparts below.**  
+
+```
+model {
+   for(i in 1:length(Transistors)) {
+      log(Transistors[i]) ~ dnorm(beta1 + beta2*Ycent[i], sigmasqinv)
+   }
+   Tnew ~ dnorm(beta1 + beta2*YNewcent, sigmasqinv)
+   
+   beta1 ~ dnorm(0, (1/1000^2))
+   beta2 ~ dnorm(0, (1/1000^2))
+   sigmasqinv ~ dgamma(0.001, 0.001)
+   
+   sigmasq = 1/sigmasqinv
+   
+   A0 = mean(Year) - beta1/beta2
+}
+```
+
+**Now run your model. Make sure to use multiple chains with overdispersed starting points, check convergence, and monitor parameters for at least 2000 iterations (per chain) after burn-in.**  
+```{r message=FALSE, warning=FALSE}
+#Set overdispersed starting points 
+inits = list(list(beta1 = 1700, beta2 = 1700, sigmasqinv = 100),
+             list(beta1 = 1700, beta2 = -1700, sigmasqinv = 0.001),
+             list(beta1 = -1700, beta2 = 1700, sigmasqinv = 0.001),
+             list(beta1 = -1700, beta2 = -1700, sigmasqinv = 100))
+
+#Setup model
+Newcent = 2020 - mean(ml$Year)
+m2 = jags.model("transistormod.bug", as.list(c(ml, YNewcent = Newcent)), 
+                 inits, n.chains = 4)
+
+#Run burn-in
+update(m2, 2000)
+
+#Run model
+x2 = coda.samples(m2, c("Tnew", "A0"), n.iter = 2500)
+
+#check for convergance
+plot(x2, smooth = FALSE)
+```
+
+**None of the parameter graphs show any concerns with convergence**  
+
+```{r}
+#Another check for problems with convergance
+gelman.diag(x2, autoburnin = FALSE)
+```  
+
+**Gelman-Rubin statistics do not show any issues with convergance**
+
+```{r}
+#Another check for convergance
+effectiveSize(x2)
+```
+
+**The sample sizes are adequate**
+
+```{r}
+#Another check for convergance (just first chain )
+autocorr.plot(x2[[1]])
+```
+
+**Autocorrelation plots do not show any issues with mixing**
+
+**There does not appear to be any issues with convergance**
+
+#### **(1)(c)(ii) List the `coda` summary you will use to help answer the subparts below.**
+```{r}
+summary(x2)
+```  
+
+#### **(1)(c)(iii) Give an approximate 95% posterior predictive interval for the transistor count, in billions, on a microprocessor introduced in the year 2020. (Note: This is for the count, NOT the log count.)**  
+
+```{r}
+exp(summary(x2)$quantiles['Tnew',c('2.5%', '97.5%')])/1000000000
+```
+
+**The approximate 95% posterior predictive interval for the transistor count in billions, on a m icropocessor introduced in the year 2020 is (`r exp(summary(x2)$quantiles['Tnew','2.5%'])/1000000000`, `r exp(summary(x2)$quantiles['Tnew','97.5%'])/1000000000`)**  
+
+
+#### **(1)(c)(iv) Explain why the model suggests that the transistor was invented in the year:** 
+\[\bar{A} - \frac{\beta_1}{\beta_2} \] 
+
+**To find the year the model predicts the transistor was invented, we need to find where the transistor count is 0**
+
+\[y = 0 = \beta_1 + \beta_2*(A - \bar{A}) \]  
+\[-\frac{\beta_1}{\beta_2} = A - \bar{A} \]  
+\[A = \bar{A} - \frac{\beta_1}{\beta_2} \]
+
+**This explains how the model suggests the transistor was invented in the year $\bar{A} - \frac{\beta_1}{\beta_2}$**
+
+**give an approximate 95% posterior interval for this quantity. (You may compare this to the actual year in which the transistor was invented.)**  
+
+```{r}
+summary(x2)$quantiles['A0',c('2.5%', '97.5%')]
+```
+
+**The approximate 95% posterior interval for this quantity is (`r round(summary(x2)$quantiles['A0','2.5%'])`, `r round(summary(x2)$quantiles['A0','97.5%'])`)**  
+
+**This compares very close to the actual year of 1947 (really December 23, 1947, so you could almost call that 1948)**  
+
+
+#### **(1)(d) One way to check for evidence of outliers is a posterior predictive p-value based on test quantity** 
+
+\[T(y, X, \theta) = \underset{i}{max} |\frac{\epsilon_i}{\sigma}| \]
+
+**where $\epsilon_i$ is the error for observation i. The larger this quantity is, the more we should suspect the existence of an outlier.**
+
+#### **(1)(d)(i) Show R code for computing the simulated error vectors $\epsilon$ (as rows of a matrix).** 
+
+```{r}
+#Get matrixes/vectors from simulated MCMC model
+betas.sim = as.matrix(x1)[, 1:2]
+sigma.2.sim = as.matrix(x1)[, 3]
+
+#Create X matrix with first column as 1's
+X = as.matrix(cbind(rep(1, nrow(ml)), ml$Ycent))
+
+nsims = chains*iters
+
+#Create empty matrix to store error vectors
+error.sim = matrix(NA, nsims, nrow(ml))
+
+#Calculate simulated error vectors
+for (s in 1:nsims){
+       error.sim[s, ] = log(ml$Transistors) - X %*% cbind(betas.sim[s, ])
+}
+        
+```
+
+
+#### **(1)(d)(ii) Show R code for computing simulated replicate error vectors $\epsilon^{rep}$ (as rows of a matrix), which are the error vectors for the replicate response vectors $y^{rep}$.**  
+```{r}
+#Replicated errors
+error.rep = matrix(rnorm(nsims*nrow(ml), mean = 0, sd = sqrt(sigma.2.sim)), 
+                   nsims, nrow(ml))
+```
+
+#### **(1)(d)(iii) Show R code for computing the simulated values of $T(y, X, \theta)$ and the simulated values of $T(y^{rep}, X, \theta)$ **  
+```{r}
+#Simulated values of T(y, X, theta)
+Tysim = apply(abs(error.sim/sqrt(sigma.2.sim)), 1, max)
+
+#Simulated values of (Yrep, X, theta)
+Tyrep = apply(abs(error.rep)/sqrt(sigma.2.sim), 1, max)
+```  
+
+#### **(1)(d)(iv) Plot the simulated values of $T(y^{rep},X, \theta)$ versus those of $T(y, X, \theta)$, with a reference line indicating where $T(y^{rep}, X, \theta) = T(y, X, \theta)$.**  
+
+```{r fig.height=5, fig.width=10}
+plot(Tyrep, Tysim, col = "dodgerblue", main = "Simulated vs Replicate Std. Errors")
+abline(0, 1, col = "darkorange")
+```
+
+#### **(1)(d)(v) Compute the approximate posterior predictive p-value, and make an appropriate conclusion based on it. (Is there evidence for an outlier?)**  
+```{r }
+mean(Tyrep >=Tysim)
+```  
+
+**The approximate posterior predictive p-value is `r mean(Tyrep >= Tysim)`**
+
+**The test quantity and plot seem to indicate that there may be an issue with outliers**
+
+#### **(1)(d)(vi) Name the microprocessor that appears to be the most extreme outlier.**  
+```{r}
+#find largest error in each yi
+p = apply(abs(error.sim/sqrt(sigma.2.sim)), 1, which.max)
+
+#Find most common max error
+y = table(p)
+(proc = as.character(ml$Processor[as.numeric(names(y)[which(y==max(y))])]))
+```
+
+**The micrproccesor that appears to be the most extreme outlier is the `r proc`**
+
