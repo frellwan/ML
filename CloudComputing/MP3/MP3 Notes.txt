@@ -1,0 +1,45 @@
+Completed MP3. If you have not started, it is definitely very time consuming, so plan accordingly.
+Here are some tips:
+* General
+** AWS educate a/c did not work for me, so I used my personal account
+** Since I started, I did not stop any services, so my AWS cost was close to 10$
+** Used us-east-1 
+* AWS EKS/Kubernetes setup
+** Created EC2 (t2.micro) (aka node 0)
+** Add rule to allow http traffic (I used port 8080)
+** Followed the instructions https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html
+** Used "Cluster with Linux-only workloads" option and passed ssh public key from EC2 (node 0) which is required if you want to ssh to worker nodes (node 1 & node 2 both are t3.medium)
+** When I created the cluster I used only specific zones (3 zones)
+* Containerization
+** The classify.py file that I used had hard-coded DATASET & TYPE which I fixed manually
+** I modified classify.py to flush stdout to see the output
+** Added ENV to Dockerfile
+** To keep it simple, I manually downloaded the raw/processed mnist data from internet and built it into the Docker image and turned off the download in classify.py
+** HINT: DATASET value mnist vs kmnist ;** Tested the Docker image on node 0 and then did the same on node 1 and node 2 (so I have image locally available on node 1 & node 2)
+** Used tag when building docker image (did not use ":latest")
+* Deploying to cluster
+** Created two job specs (one for free service and another one for premium)
+** Tested job specs locally on node 0 
+** Defined ENV in job spec
+* Resource Provisioning
+** Followed the instruction at https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/quota-memory-cpu-namespace/ to create & apply resource quota
+** Locally tested the resource quota on node 0 
+** Ensured that atmost there can be only two free-service jobs and there can be any number of premium jobs
+* Exposing Image Classification
+** Created GET "/config" endpoint to return pod details
+** Created two POST endpoints: one for free and another one for premium (HINT: DATASET value mnist vs kmnist ;-))
+** Log debug messages from your RESTful endpoints so that you can find out what's going when you run test.py
+** You don't have to necessarily use client libraries ;
+* Created a simple shell script on node 0 to delete jobs. Required before running test.py
+* Finally delete all the services
+Some useful commands:
+kubectl get deployments -A --all-namespaces
+kubectl get jobs -A --all-namespaces
+kubectl describe <...>
+kubectl get pods -A --all-namespaces
+kubectl describe pod <pod_name> --all-namespaces
+kubectl logs <...>
+kubectl get nodes -A --all-namespaces
+docker ps -a
+docker container prune
+docker images

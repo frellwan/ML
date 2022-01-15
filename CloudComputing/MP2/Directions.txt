@@ -1,0 +1,30 @@
+Finally done with MP2.
+Some tips:
+1. For POST API
+* For setting up DynamoDB, IAM role & Lambda function, carefully follow Step 1, Step 2 & Step 3 - https://aws.amazon.com/getting-started/projects/build-serverless-web-app-lambda-apigateway-s3-dynamodb-cognito/module-3/
+* Use requestUnicorn.js as example for your Lambda function - Step 3 - https://aws.amazon.com/getting-started/projects/build-serverless-web-app-lambda-apigateway-s3-dynamodb-cognito/module-3/
+* For deploying your REST API, follow Step 1, Step 3 & Step 4 - https://aws.amazon.com/getting-started/projects/build-serverless-web-app-lambda-apigateway-s3-dynamodb-cognito/module-4/
+* For setting up Identify Pool, refer to "Set up Amazon Cognito" section - https://aws.amazon.com/blogs/machine-learning/greetings-visitor-engage-your-web-users-with-amazon-lex/
+* In your API you need to set AUTH to either NONE or AWS_IAM
+* For API URL, you need to expand the Stage that you created and use the URL from POST
+* Use Lamda console to test your function
+* If you use Test event, then the double quotes in the body value has to be properly escaped. Ex:
+"body": "{\"graph\": \"city100\"}"
+* API should return status code: 200
+* Use CloudWatch logs for debugging/testing
+* Test your API from console and Postman before running test.py
+2. For Lex:
+* There are many tutorials. I used this one: https://chatbotsmagazine.com/quick-start-develop-a-chat-bot-with-aws-lex-lambda-part-1-b6f7c80ebba6
+* If are new to Lex, you need to build your bot first for testing. Lex Console automatically shows test window
+* You can quickly test your bot without any Lambda function (try this first if you are new to Lex)
+* For quick testing, you can also create a simple Lambda handler. Lex-Lambda expects request/response JSON in certain format. Refer here: https://docs.aws.amazon.com/lex/latest/dg/lambda-input-response-format.html
+* Your Lambda function can use "getItem" to read data from DynamoDB
+* Make sure you grant necessary Read/Write permissions in the inline policy for DynamoDB
+* Like your graph Lambda function, test bot Lambda function from the Lambda console and from Lex console
+* Use CloudWatch logs for debugging/testing
+*Dont't forget to publish your bot
+3. test.py
+* test.py expects POST response code to be 200
+* For account ID, remove the hyphens
+* For "flush the respective table of your database before storing this state", you can also simply drop the items from the DynamoDB console before running test.py
+4. After you get 1/1 score, shutdown/remove all your AWS services.

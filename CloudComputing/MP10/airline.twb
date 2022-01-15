@@ -1,0 +1,830 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!-- build 20201.20.0326.1623                               -->
+<workbook source-build='2020.1.2 (20201.20.0326.1623)' source-platform='win' version='18.1' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <document-format-change-manifest>
+    <_.fcp.MarkAnimation.true...MarkAnimation />
+    <SheetIdentifierTracking />
+    <WindowsPersistSimpleIdentifiers />
+  </document-format-change-manifest>
+  <preferences>
+    <preference name='ui.encoding.shelf.height' value='24' />
+    <preference name='ui.shelf.height' value='26' />
+  </preferences>
+  <datasources>
+    <datasource caption='airline' inline='true' name='federated.1cql2jg1rylslx10ulq740cxpi68' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='airline' name='textscan.08mdrj111nxtsk17afuxn1npa15e'>
+            <connection class='textscan' directory='C:/Users/frell/Downloads' filename='airline.csv' password='' port='0' server='' />
+          </named-connection>
+        </named-connections>
+        <relation connection='textscan.08mdrj111nxtsk17afuxn1npa15e' name='airline.csv' table='[airline#csv]' type='table'>
+          <columns character-set='UTF-8' header='yes' locale='en_US' separator=','>
+            <column datatype='integer' name='year' ordinal='0' />
+            <column datatype='integer' name='month' ordinal='1' />
+            <column datatype='integer' name='day' ordinal='2' />
+            <column datatype='string' name='airline' ordinal='3' />
+            <column datatype='string' name='origin_airport' ordinal='4' />
+            <column datatype='string' name='stop_over_airport' ordinal='5' />
+            <column datatype='string' name='destination_airport' ordinal='6' />
+            <column datatype='integer' name='origin_departure_delay' ordinal='7' />
+            <column datatype='integer' name='stop_over_arival_time' ordinal='8' />
+            <column datatype='integer' name='stop_over_arrival_delay' ordinal='9' />
+            <column datatype='integer' name='stop_over_departure_time' ordinal='10' />
+            <column datatype='integer' name='stop_over_departure_delay' ordinal='11' />
+            <column datatype='integer' name='destination_arrival_delay' ordinal='12' />
+          </columns>
+        </relation>
+        <metadata-records>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;en_US&quot;</attribute>
+              <attribute datatype='string' name='field-delimiter'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;en_US&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>year</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[year]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>year</remote-alias>
+            <ordinal>0</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>month</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[month]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>month</remote-alias>
+            <ordinal>1</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>day</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[day]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>day</remote-alias>
+            <ordinal>2</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>airline</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[airline]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>airline</remote-alias>
+            <ordinal>3</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>origin_airport</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[origin_airport]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>origin_airport</remote-alias>
+            <ordinal>4</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_airport</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[stop_over_airport]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>stop_over_airport</remote-alias>
+            <ordinal>5</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>destination_airport</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[destination_airport]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>destination_airport</remote-alias>
+            <ordinal>6</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>origin_departure_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[origin_departure_delay]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>origin_departure_delay</remote-alias>
+            <ordinal>7</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_arival_time</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_arival_time]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>stop_over_arival_time</remote-alias>
+            <ordinal>8</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_arrival_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_arrival_delay]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>stop_over_arrival_delay</remote-alias>
+            <ordinal>9</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_departure_time</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_departure_time]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>stop_over_departure_time</remote-alias>
+            <ordinal>10</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_departure_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_departure_delay]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>stop_over_departure_delay</remote-alias>
+            <ordinal>11</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>destination_arrival_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[destination_arrival_delay]</local-name>
+            <parent-name>[airline.csv]</parent-name>
+            <remote-alias>destination_arrival_delay</remote-alias>
+            <ordinal>12</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+        </metadata-records>
+      </connection>
+      <aliases enabled='yes' />
+      <column datatype='integer' name='[Number of Records]' role='measure' type='quantitative' user:auto-column='numrec'>
+        <calculation class='tableau' formula='1' />
+      </column>
+      <column caption='Airline' datatype='string' name='[airline]' role='dimension' type='nominal' />
+      <column caption='Day' datatype='integer' name='[day]' role='dimension' type='quantitative' />
+      <column caption='Destination Airport' datatype='string' name='[destination_airport]' role='dimension' type='nominal' />
+      <column caption='Destination Arrival Delay' datatype='integer' name='[destination_arrival_delay]' role='measure' type='quantitative' />
+      <column caption='Month' datatype='integer' name='[month]' role='dimension' type='quantitative' />
+      <column caption='Origin Airport' datatype='string' name='[origin_airport]' role='dimension' type='nominal' />
+      <column caption='Origin Departure Delay' datatype='integer' name='[origin_departure_delay]' role='measure' type='quantitative' />
+      <column caption='Stop Over Airport' datatype='string' name='[stop_over_airport]' role='dimension' type='nominal' />
+      <column caption='Stop Over Arival Time' datatype='integer' name='[stop_over_arival_time]' role='measure' type='quantitative' />
+      <column caption='Stop Over Arrival Delay' datatype='integer' name='[stop_over_arrival_delay]' role='measure' type='quantitative' />
+      <column caption='Stop Over Departure Delay' datatype='integer' name='[stop_over_departure_delay]' role='measure' type='quantitative' />
+      <column caption='Stop Over Departure Time' datatype='integer' name='[stop_over_departure_time]' role='measure' type='quantitative' />
+      <column caption='Year' datatype='integer' name='[year]' role='dimension' type='quantitative' />
+      <column-instance column='[stop_over_airport]' derivation='None' name='[none:stop_over_airport:nk]' pivot='key' type='nominal' />
+      <layout dim-ordering='alphabetic' dim-percentage='0.501085' measure-ordering='alphabetic' measure-percentage='0.498915' show-structure='true' />
+      <style>
+        <style-rule element='mark'>
+          <encoding attr='color' field='[none:stop_over_airport:nk]' type='palette'>
+            <map to='#4e79a7'>
+              <bucket>&quot;ATL&quot;</bucket>
+            </map>
+            <map to='#76b7b2'>
+              <bucket>&quot;LAX&quot;</bucket>
+            </map>
+            <map to='#e15759'>
+              <bucket>&quot;LAS&quot;</bucket>
+            </map>
+            <map to='#f28e2b'>
+              <bucket>&quot;BOS&quot;</bucket>
+            </map>
+          </encoding>
+        </style-rule>
+      </style>
+      <semantic-values>
+        <semantic-value key='[Country].[Name]' value='&quot;United States&quot;' />
+      </semantic-values>
+    </datasource>
+    <datasource caption='airline (1)' inline='true' name='federated.0xb454c0roi57c1f4s1us1gfnusx' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='airline (1)' name='textscan.0sz448i02rwd5613g2crc0pryo0n'>
+            <connection class='textscan' directory='C:/Users/frell/Documents/GitHub/CS498/MP9' filename='airline (1).csv' password='' server='' />
+          </named-connection>
+        </named-connections>
+        <relation connection='textscan.0sz448i02rwd5613g2crc0pryo0n' name='airline (1).csv' table='[airline (1)#csv]' type='table'>
+          <columns character-set='UTF-8' header='yes' locale='en_US' separator=','>
+            <column datatype='integer' name='year' ordinal='0' />
+            <column datatype='integer' name='month' ordinal='1' />
+            <column datatype='integer' name='day' ordinal='2' />
+            <column datatype='string' name='airline' ordinal='3' />
+            <column datatype='string' name='origin_airport' ordinal='4' />
+            <column datatype='string' name='stop_over_airport' ordinal='5' />
+            <column datatype='string' name='destination_airport' ordinal='6' />
+            <column datatype='integer' name='origin_departure_delay' ordinal='7' />
+            <column datatype='integer' name='stop_over_arival_time' ordinal='8' />
+            <column datatype='integer' name='stop_over_arrival_delay' ordinal='9' />
+            <column datatype='integer' name='stop_over_departure_time' ordinal='10' />
+            <column datatype='integer' name='stop_over_departure_delay' ordinal='11' />
+            <column datatype='integer' name='destination_arrival_delay' ordinal='12' />
+          </columns>
+        </relation>
+        <metadata-records>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;en_US&quot;</attribute>
+              <attribute datatype='string' name='field-delimiter'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;en_US&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>year</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[year]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>year</remote-alias>
+            <ordinal>0</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>month</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[month]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>month</remote-alias>
+            <ordinal>1</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>day</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[day]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>day</remote-alias>
+            <ordinal>2</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>airline</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[airline]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>airline</remote-alias>
+            <ordinal>3</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>origin_airport</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[origin_airport]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>origin_airport</remote-alias>
+            <ordinal>4</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_airport</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[stop_over_airport]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>stop_over_airport</remote-alias>
+            <ordinal>5</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>destination_airport</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[destination_airport]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>destination_airport</remote-alias>
+            <ordinal>6</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LEN_RUS' />
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>origin_departure_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[origin_departure_delay]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>origin_departure_delay</remote-alias>
+            <ordinal>7</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_arival_time</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_arival_time]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>stop_over_arival_time</remote-alias>
+            <ordinal>8</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_arrival_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_arrival_delay]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>stop_over_arrival_delay</remote-alias>
+            <ordinal>9</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_departure_time</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_departure_time]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>stop_over_departure_time</remote-alias>
+            <ordinal>10</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>stop_over_departure_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[stop_over_departure_delay]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>stop_over_departure_delay</remote-alias>
+            <ordinal>11</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>destination_arrival_delay</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[destination_arrival_delay]</local-name>
+            <parent-name>[airline (1).csv]</parent-name>
+            <remote-alias>destination_arrival_delay</remote-alias>
+            <ordinal>12</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+          </metadata-record>
+        </metadata-records>
+      </connection>
+      <aliases enabled='yes' />
+      <column datatype='integer' name='[Number of Records]' role='measure' type='quantitative' user:auto-column='numrec'>
+        <calculation class='tableau' formula='1' />
+      </column>
+      <column caption='Airline' datatype='string' name='[airline]' role='dimension' type='nominal' />
+      <column caption='Day' datatype='integer' name='[day]' role='dimension' type='quantitative' />
+      <column caption='Destination Airport' datatype='string' name='[destination_airport]' role='dimension' type='nominal' />
+      <column caption='Destination Arrival Delay' datatype='integer' name='[destination_arrival_delay]' role='measure' type='quantitative' />
+      <column caption='Month' datatype='integer' name='[month]' role='dimension' type='quantitative' />
+      <column caption='Origin Airport' datatype='string' name='[origin_airport]' role='dimension' type='nominal' />
+      <column caption='Origin Departure Delay' datatype='integer' name='[origin_departure_delay]' role='measure' type='quantitative' />
+      <column caption='Stop Over Airport' datatype='string' name='[stop_over_airport]' role='dimension' type='nominal' />
+      <column caption='Stop Over Arival Time' datatype='integer' name='[stop_over_arival_time]' role='measure' type='quantitative' />
+      <column caption='Stop Over Arrival Delay' datatype='integer' name='[stop_over_arrival_delay]' role='measure' type='quantitative' />
+      <column caption='Stop Over Departure Delay' datatype='integer' name='[stop_over_departure_delay]' role='measure' type='quantitative' />
+      <column caption='Stop Over Departure Time' datatype='integer' name='[stop_over_departure_time]' role='measure' type='quantitative' />
+      <column caption='Year' datatype='integer' name='[year]' role='dimension' type='quantitative' />
+      <layout dim-ordering='alphabetic' dim-percentage='0.501085' measure-ordering='alphabetic' measure-percentage='0.498915' rowDisplayCount='1000' show-structure='true' />
+      <semantic-values>
+        <semantic-value key='[Country].[Name]' value='&quot;United States&quot;' />
+      </semantic-values>
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name='Sheet 1'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='airline' name='federated.1cql2jg1rylslx10ulq740cxpi68' />
+          </datasources>
+          <datasource-dependencies datasource='federated.1cql2jg1rylslx10ulq740cxpi68'>
+            <column datatype='integer' name='[Number of Records]' role='measure' type='quantitative' user:auto-column='numrec'>
+              <calculation class='tableau' formula='1' />
+            </column>
+            <column-instance column='[Number of Records]' derivation='Count' name='[cnt:Number of Records:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[stop_over_airport]' derivation='None' name='[none:stop_over_airport:nk]' pivot='key' type='nominal' />
+            <column caption='Stop Over Airport' datatype='string' name='[stop_over_airport]' role='dimension' type='nominal' />
+          </datasource-dependencies>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+          </pane>
+        </panes>
+        <rows>[federated.1cql2jg1rylslx10ulq740cxpi68].[cnt:Number of Records:qk]</rows>
+        <cols>[federated.1cql2jg1rylslx10ulq740cxpi68].[none:stop_over_airport:nk]</cols>
+      </table>
+      <simple-id uuid='{4A3BF0E4-7FB6-4D0F-9319-B1CBEA2611B4}' />
+    </worksheet>
+    <worksheet name='Sheet 2'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='airline' name='federated.1cql2jg1rylslx10ulq740cxpi68' />
+          </datasources>
+          <datasource-dependencies datasource='federated.1cql2jg1rylslx10ulq740cxpi68'>
+            <column caption='Destination Arrival Delay' datatype='integer' name='[destination_arrival_delay]' role='measure' type='quantitative' />
+            <column-instance column='[destination_arrival_delay]' derivation='None' name='[none:destination_arrival_delay:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[stop_over_departure_delay]' derivation='None' name='[none:stop_over_departure_delay:qk]' pivot='key' type='quantitative' />
+            <column caption='Stop Over Departure Delay' datatype='integer' name='[stop_over_departure_delay]' role='measure' type='quantitative' />
+            <column-instance column='[destination_arrival_delay]' derivation='Sum' name='[sum:destination_arrival_delay:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[stop_over_departure_delay]' derivation='Sum' name='[sum:stop_over_departure_delay:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='quantitative' column='[federated.1cql2jg1rylslx10ulq740cxpi68].[none:destination_arrival_delay:qk]' included-values='in-range'>
+            <min>110</min>
+            <max>220</max>
+          </filter>
+          <filter class='quantitative' column='[federated.1cql2jg1rylslx10ulq740cxpi68].[none:stop_over_departure_delay:qk]' included-values='in-range'>
+            <min>200</min>
+            <max>260</max>
+          </filter>
+          <slices>
+            <column>[federated.1cql2jg1rylslx10ulq740cxpi68].[none:stop_over_departure_delay:qk]</column>
+            <column>[federated.1cql2jg1rylslx10ulq740cxpi68].[none:destination_arrival_delay:qk]</column>
+          </slices>
+          <aggregation value='false' />
+        </view>
+        <style />
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+          </pane>
+        </panes>
+        <rows>[federated.1cql2jg1rylslx10ulq740cxpi68].[sum:destination_arrival_delay:qk]</rows>
+        <cols>[federated.1cql2jg1rylslx10ulq740cxpi68].[sum:stop_over_departure_delay:qk]</cols>
+      </table>
+      <simple-id uuid='{08A2A621-714A-4776-A9EC-FDC589910403}' />
+    </worksheet>
+    <worksheet name='Sheet 3'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='airline (1)' name='federated.0xb454c0roi57c1f4s1us1gfnusx' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0xb454c0roi57c1f4s1us1gfnusx'>
+            <column datatype='integer' name='[Number of Records]' role='measure' type='quantitative' user:auto-column='numrec'>
+              <calculation class='tableau' formula='1' />
+            </column>
+            <column-instance column='[Number of Records]' derivation='Count' name='[cnt:Number of Records:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[stop_over_airport]' derivation='None' name='[none:stop_over_airport:nk]' pivot='key' type='nominal' />
+            <column caption='Stop Over Airport' datatype='string' name='[stop_over_airport]' role='dimension' type='nominal' />
+          </datasource-dependencies>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+          </pane>
+        </panes>
+        <rows>[federated.0xb454c0roi57c1f4s1us1gfnusx].[cnt:Number of Records:qk]</rows>
+        <cols>[federated.0xb454c0roi57c1f4s1us1gfnusx].[none:stop_over_airport:nk]</cols>
+      </table>
+      <simple-id uuid='{F0FED924-4370-4DC7-A2FC-9A7AC1D70B85}' />
+    </worksheet>
+    <worksheet name='Sheet 4'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='airline (1)' name='federated.0xb454c0roi57c1f4s1us1gfnusx' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0xb454c0roi57c1f4s1us1gfnusx'>
+            <column caption='Destination Arrival Delay' datatype='integer' name='[destination_arrival_delay]' role='measure' type='quantitative' />
+            <column-instance column='[destination_arrival_delay]' derivation='None' name='[none:destination_arrival_delay:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[stop_over_departure_delay]' derivation='None' name='[none:stop_over_departure_delay:qk]' pivot='key' type='quantitative' />
+            <column caption='Stop Over Departure Delay' datatype='integer' name='[stop_over_departure_delay]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='quantitative' column='[federated.0xb454c0roi57c1f4s1us1gfnusx].[none:destination_arrival_delay:qk]' included-values='in-range'>
+            <min>110</min>
+            <max>220</max>
+          </filter>
+          <filter class='quantitative' column='[federated.0xb454c0roi57c1f4s1us1gfnusx].[none:stop_over_departure_delay:qk]' included-values='in-range'>
+            <min>200</min>
+            <max>260</max>
+          </filter>
+          <slices>
+            <column>[federated.0xb454c0roi57c1f4s1us1gfnusx].[none:stop_over_departure_delay:qk]</column>
+            <column>[federated.0xb454c0roi57c1f4s1us1gfnusx].[none:destination_arrival_delay:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+          </pane>
+        </panes>
+        <rows>[federated.0xb454c0roi57c1f4s1us1gfnusx].[none:stop_over_departure_delay:qk]</rows>
+        <cols>[federated.0xb454c0roi57c1f4s1us1gfnusx].[none:destination_arrival_delay:qk]</cols>
+      </table>
+      <simple-id uuid='{181160AD-C85A-41C8-AB1B-3885ABFAC266}' />
+    </worksheet>
+  </worksheets>
+  <windows source-height='51'>
+    <window class='worksheet' name='Sheet 1'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{D7B8AFE2-A9B9-4C93-BD1B-822460261B54}' />
+    </window>
+    <window class='worksheet' name='Sheet 2'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='title' />
+          </strip>
+        </edge>
+        <edge name='right'>
+          <strip size='160'>
+            <card param='[federated.1cql2jg1rylslx10ulq740cxpi68].[none:stop_over_departure_delay:qk]' show-domain='false' show-null-ctrls='false' type='filter' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{110DB00A-42BE-4CBF-B6A2-1C8F00F90708}' />
+    </window>
+    <window class='worksheet' maximized='true' name='Sheet 3'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{DE119659-123E-459F-BA58-5FD13D172EC5}' />
+    </window>
+    <window class='worksheet' name='Sheet 4'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{0CA0A727-6889-40A9-ABF5-2E16B3E4BF99}' />
+    </window>
+  </windows>
+  <thumbnails>
+    <thumbnail height='192' name='Sheet 3' width='192'>
+      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
+      AAAASUVORK5CYII=
+    </thumbnail>
+  </thumbnails>
+</workbook>

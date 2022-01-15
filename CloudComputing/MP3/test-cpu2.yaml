@@ -1,0 +1,16 @@
+admin/resource/quota-mem-cpu-pod-2.yaml 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quota-mem-cpu-demo-2
+spec:
+  containers:
+  - name: quota-mem-cpu-demo-2-ctr
+    image: redis
+    resources:
+      limits:
+        cpu: "2"      
+      requests:
+        cpu: "0.9"
+      

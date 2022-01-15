@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: premium-deployment-
+spec:
+  template:
+    spec:
+      containers:
+      - name: premium
+        env:
+        - name: TYPE
+          value: "ff"
+        - name: DATASET
+          value: "mnist"  
+        command: ["docker container run frellwan/cs498:mp3"]
+      restartPolicy: Never
+  backoffLimit: 4

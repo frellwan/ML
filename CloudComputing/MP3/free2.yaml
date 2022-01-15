@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: free-deployment
+spec:
+  containers:
+  - name: quota-mem-cpu-demo-ctr
+    image: frellwan/cs498:mp3
+    resources:
+      limits:
+        cpu: "2" 
+      requests:
+        cpu: "0.9"
+    command: ["docker", "container", "run", "frellwan/cs498:mp3"]
+  restartPolicy: OnFailure
