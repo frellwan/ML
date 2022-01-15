@@ -1,0 +1,173 @@
+---
+title: "PSL (F20) Project 3 - Vocabulary Construction"
+output:    
+  html_document:
+      toc: true
+      toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#### Frederick (Eric) Ellwanger - fre2 
+
+
+Load required packages
+```{r message=FALSE, warning=FALSE}
+mypackages = c("text2vec", "tm", "slam", "glmnet")   
+tmp = setdiff(mypackages, rownames(installed.packages())) 
+if (length(tmp) > 0) install.packages(tmp)
+
+library(text2vec)
+library(tm)
+library(slam)
+library(glmnet)
+```
+
+
+## Load Split 1 Data  
+This project uses the training data in `split_1` to construct the vocubalary to use for all of the splits. The first thing to do is to load the data into memory and then remove html tags using the gsub regex pattern .*?.
+
+```{r message=FALSE, warning=FALSE}
+#Setup to read in the 1st split
+j = 1
+setwd(paste("split_", j, sep=""))
+
+#Read the file in as a table
+train = read.table("train.tsv",
+                   stringsAsFactors = FALSE,
+                   header = TRUE)
+
+#Remove punctuation from the review portion of the file
+train$review = gsub('<.*?>', ' ', train$review)
+```
+
+## Remove common words  
+Some words appear commonly and do not add any value in determining whether the review is a good review or a bad review. This report removes these words from the review portion of the file. All words are made lowercase to help insure all of these words are removed regardless of capitalization. There may also be words that appear very frequently or very infrequently that would make these words fairly useless in helping to classify a review. These words are also pruned from the vocabulary. Words here actually refers to a term that can be a phrase involving more than one word.
+
+```{r}
+#Common words that do not add value to classification - should be removed from vocabulary
+stop_words = c("i", "me", "my", "myself", 
+               "we", "our", "ours", "ourselves", 
+               "you", "your", "yours", 
+               "their", "they", "his", "her", 
+               "she", "he", "a", "an", "and",
+               "is", "was", "are", "were", 
+               "him", "himself", "has", "have", 
+               "it", "its", "the", "us")
+
+#Create the word tokens to be used to make a vocabulary - make words lowercase
+it_train = itoken(train$review,
+                  preprocessor = tolower, 
+                  tokenizer = word_tokenizer)
+
+#Create vocabulary words (or upto 4-grams) in lower case removing stopwords
+tmp.vocab = create_vocabulary(it_train, 
+                              stopwords = stop_words, 
+                              ngram = c(1L,4L))
+
+
+#Prune words that occur very frequently or very infrequently
+tmp.vocab = prune_vocabulary(tmp.vocab, term_count_min = 10,
+                             doc_proportion_max = 0.5,
+                             doc_proportion_min = 0.001)
+
+#Create the Document Term Matrix structure
+dtm_train  = create_dtm(it_train, vocab_vectorizer(tmp.vocab))
+```
+
+
+## Determine Positive/Negative review words   
+There are words that are found in both positive and negative reviews. These words are probably not very helpful in classifying a review. The below code determines the two sample t-test statistic that the means for both positive and negative reviews are the same for each word in the vocabulary. The higher the t statistic the more likely we can reject that hypothesis. This will help to choose a smaller vocabulary that is better at distinguishing between a good review and a bad review.  
+
+```{r}
+
+v.size = dim(dtm_train)[2]
+ytrain = train$sentiment
+
+#Create matrix for the means/variances of all the words 
+summ = matrix(0, nrow=v.size, ncol=4)
+
+#Calculate the mean of each word for positive reviews
+summ[,1] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==1, ]), mean)
+
+#Calculate the variance of each word for positive reviews
+summ[,2] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==1, ]), var)
+
+#Calculate the mean of each word for negative reviews
+summ[,3] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==0, ]), mean)
+
+#Calculate the variance for each word for negative reviews
+summ[,4] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==0, ]), var)
+
+#Number of positive samples
+n1 = sum(ytrain); 
+
+#Total number of samples
+n = length(ytrain)
+
+#Number of negative samples
+n0 = n - n1
+
+#Calculate two sample t-statistic
+myp = (summ[,1] - summ[,3])/
+  sqrt(summ[,2]/n1 + summ[,4]/n0)
+```
+
+
+Once the t statistics are calcualted, the words are sorted in order of the absolute value of these t statistics from high to low. Then the top 2000 words are selected as a starting point for pruning the vocabulary.  
+
+```{r}
+#Our words are contained in the dtm_train structure
+words = colnames(dtm_train)
+
+#Order the absolute value of the probabilities from high to low. Pick top 2000 words
+id = order(abs(myp), decreasing=TRUE)[1:2000]
+
+#What words correspond to positive reviews
+pos.list = words[id[myp[id]>0]]
+
+#What words correspond to negative reviews
+neg.list = words[id[myp[id]<0]]
+
+#New vocabulary will combine positive and negative
+new_vocab = c(pos.list, neg.list)
+```
+
+## Prune vocabulary with Lasso regression 
+Lasso can be used to try to further reduce the vocubalry size by finding the top 1000 terms  
+that have non-zero coefficients.
+
+```{r}
+#Create a new Document Term Matrix structure with the new vocabulary
+dtm_new  = create_dtm(it_train, vocab_vectorizer(create_vocabulary(new_vocab,
+                                                 ngram = c(1L,4L))))
+
+set.seed(6950)
+
+#Use Lasso to reduce the number of non-zero parameters (words) 
+tmpfit = glmnet(x = dtm_new, 
+                y = train$sentiment, 
+                alpha = 1,
+                family='binomial')
+
+#Print the df to determine which beta value will give us just under 1000 words
+tmpfit$df
+```
+
+
+It can be seen that a beta of 42 will achieve a vocabulary size of under 1,000 words. This reduced vocabulary size will be used to classify the rest of the reviews.  
+
+```{r}
+#Select the non-zero parameters (words) that correspond to beta = 42
+myvocab = colnames(dtm_new)[which(tmpfit$beta[, 42] != 0)]
+
+#Write the vocabulary to a file for future use
+write(myvocab, file = "myvocab.txt")
+```
+
+The vocabulary turns out to be 970 words. 
