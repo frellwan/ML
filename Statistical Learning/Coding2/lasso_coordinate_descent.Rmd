@@ -1,0 +1,190 @@
+---
+title: "Lasso using Coordinate Descent"
+output: 
+   html_document:
+      toc: true
+      toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#### Eric Ellwanger
+
+Load the required packages for this report.  
+```{r message=FALSE, warning=FALSE}
+mypackages = c("MASS", "glmnet")   
+tmp = setdiff(mypackages, rownames(installed.packages())) 
+if (length(tmp) > 0) install.packages(tmp)
+
+library(MASS)
+library(glmnet)
+
+```  
+
+
+# Data Preparation  
+Load the Boston dataset and apply the proper transformations on the dataset.  
+```{r}
+#Load Boston housing data dataset
+myData = Boston
+
+#Apply proper transformations 
+names(myData)[14] = "Y"
+iLog = c(1, 3, 5, 6, 8, 9, 10, 14);
+myData[, iLog] = log(myData[, iLog]);
+myData[, 2] = myData[, 2] / 10;
+myData[, 7] = myData[, 7]^2.5 / 10^4
+myData[, 11] = exp(0.4 * myData[, 11]) / 1000;
+myData[, 12] = myData[, 12] / 100;
+myData[, 13] = sqrt(myData[, 13]);
+
+#Create matrix of predictors
+X = as.matrix(myData[, -14])
+
+#Create response vector
+y = myData$Y
+
+```
+
+
+# Coordinate Descent for Lasso  
+The idea behind coordinate descent is simply to minimize f(x) by successively minimizing each of the individual k dimensions of f(x) in a cyclic fashion, while holding the values of f(x) in the other k-1 dimensions fixed.   
+
+In the CD algorithm, at each iteration, we repeatedly solve a one-dimensional Lasso problem
+for $\beta_j$ while holding the other (p-1) coefficients at their current values:    
+\[\min_{\beta_j} \sum_{n=1}^{n} (y_i - \sum_{k \neq j} x_{ik} \hat\beta_k - x_{ij} \beta_j)^2 + \lambda \sum_{k \neq j} |\hat\beta_k| + \lambda |\beta_j| \]    
+    
+which is equivalent to solving:    
+\[\min_{\beta_j} \sum_{n=1}^{n} (r_i - x_{ij} \beta_j)^2 + \lambda |\beta_j| \hspace{32 pt} (1)\]    
+    
+Where;    
+\[r_i = y_i - \sum_{k \neq j} x_{ik} \hat\beta_k\]    
+    
+The minimizer of:    
+\[f(x) =  (x - a)^2 + \lambda |x| \]    
+     
+is given by:    
+\[x^* = arg \min_x f(x) = sign(a)(|a| - \lambda/2)_+ = \begin{cases} a - \lambda/2 \hspace{12 pt} if \hspace{4 pt} a > \lambda/2 \\ 0 \hspace{40 pt} if \hspace{4 pt} |a| \leq -\lambda/2 \\ a + \lambda/2 \hspace{12 pt} if \hspace{4 pt} a < -\lambda/2 \end{cases}  \hspace{12 pt} (2)\]    
+    
+The objective function (1) can be rewritten in the form of $f(x)$ and then use the solution given above:    
+\[\sum_{n=1}^{n} (r_i - x_{ij} \beta_j)^2 + \lambda |\beta_j| =  ||r_i - x_{j} \beta_j||^2 + \lambda |\beta_j| \hspace{12 pt} (3)\]    
+    
+The first term above is like the RSS from a regression model with only one predictor (whose coefficient is $\beta_j$) without the intercept. The corresponding LS estimate is given by:    
+\[\hat\beta_j = r^T x_j / ||x_j||^2\]    
+    
+That leaves:
+\[\begin{align} 
+||x_j - x_j\beta_j||^2 &= ||x_j + x_j\hat\beta_j + x_j(\beta_j - \hat\beta_j)||^2  \\ 
+&= ||r - x_j\hat\beta_j||^2 + ||x_j(\beta_j - \hat\beta_j)||^2 \end{align}  \]    
+    
+Where the first term has nothing to do with $\beta_j$, So to minimize (1) or equivalently(3) with respect to $\beta_j$, we can ignore the first term and instead minimize:    
+    
+\[\begin{align} ||x_j(\beta_j - \hat\beta_j||^2 &= ||x_j||^2(\beta_j - \hat\beta_j)^2 + \lambda |\beta_j| \\ 
+&\propto (\beta_j - \hat\beta_j)^2 + \frac{\lambda}{||x||^2}\beta_j \end{align} \]    
+    
+Now using (2), the solution can be derived for f(x), with    
+\[a = \hat\beta_j = r^Tx_j/||x_j||^2, \hspace{22 pt}   \lambda = \lambda/||x_j||^2 \]    
+\vspace{18 pt}
+
+
+
+#### Below is an implementation of Lasso using Coordinate Descent algorithm.     
+#### This algorithm is then applied to the Boston housing data.  
+#### The results are compared to coefficients generated from glmnet using lasso regularization (alpha=1)
+```{r}
+one_var_lasso = function(r, x, lam) {
+    xx = sum(x^2)
+    xr = sum(r * x)
+    b = (abs(xr) - lam/2)/xx
+    b = sign(xr) * ifelse(b > 0, b, 0)
+    return(b)
+}
+
+MyLasso = function(X, y, lam.seq, maxit = 50) {
+    
+    # X: n-by-p design matrix without the intercept 
+    # y: n-by-1 response vector 
+    # lam.seq: sequence of lambda values 
+    # maxit: number of updates for each lambda 
+    # Center/Scale X
+    # Center y
+  
+    n = length(y)
+    p = dim(X)[2]
+    nlam = length(lam.seq)
+  
+    ###########################################
+    # Record the corresponding means and scales
+    # Center the response variable
+    y.mean = mean(y)
+    y.centered = scale(y, center=TRUE, scale=FALSE)
+    
+    #Center and Scale the preditor variables
+    X.mean = colMeans(X)
+    X.sd = apply(X, 2, sd)*sqrt((n-1)/n)
+    X.scaled = scale(X, center=TRUE, scale=X.sd)
+    ##############################
+
+    # Initilize coef vector b and residual vector r
+    b = rep(0, p)
+    r = y.centered
+    B = matrix(nrow = nlam, ncol = p + 1)
+    
+    # Loop through each lambda value
+    for (m in 1:nlam) {
+        lam = 2 * n * lam.seq[m]
+        
+        # Loop through max number of iterations
+        for (step in 1:maxit) {
+          
+            # Loop through each coordinate
+            for (j in 1:p) {
+                r = r + (X.scaled[, j] * b[j])
+                b[j] = one_var_lasso(r, X.scaled[, j], lam)
+                r = r - (X.scaled[, j] * b[j])
+            }
+        }
+        B[m, ] = c(0, b)
+    }
+    
+    ##############################
+    # Scale back the coefficients;
+    # Update the intercepts stored in B[, 1]
+    # Calculate Intercepts before changing b's
+    B[,1] = y.mean - (B[,-1] %*% as.matrix(X.mean/X.sd))
+    
+    #Scale b's back to original scale
+    B[,c(2:14)] = t(t(B[,c(2:14)]) / X.sd)
+    
+    #Return transpose of B to put in similar layout as coef(glmnetFittedModel)
+    return(t(B))
+}
+```
+
+# Check the Accuracy  
+
+Compute and display the coefficients using the glmnet algorithm.
+```{r}
+#create sequence of lambda values for lasso
+lam.seq = c(0.30 , 0.2 , 0.1 , 0.05 , 0.02 , 0.005)
+
+lasso.fit = glmnet (X , y , alpha = 1 , lambda = lam.seq)
+coef (lasso.fit)
+```
+
+Compute and display the coefficients with MyLasso Algorithm. 
+```{r}
+myout = MyLasso(X , y , lam.seq , maxit = 50)
+rownames(myout) = c("Intercept", colnames(X))
+myout
+
+```  
+
+
+Compare the accuracy of MyLasso algorithm against the output from glmnet. The maximum difference between the two coefficient matrices should be very small.
+```{r}
+max(abs(coef(lasso.fit) - myout))
+```
+
+

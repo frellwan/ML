@@ -1,0 +1,149 @@
+---
+title: "PSL (F20) Coding Assignemnt 3"
+output: 
+   html_document:
+      toc: true
+      toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#### Frederick (Eric) Ellwanger - fre2
+#### 10/13/2020  
+
+### Introduction
+Loess short for Local Regression is a non-parametric approach that fits multiple regressions in local neighborhood. This can be particularly resourceful, if you know that your X variables are bound within a range.    
+Loess regression can be applied using the loess() function on a numerical vector to smoothen it and to predict the Y locally (i.e, within the trained values of Xs). The size of the neighborhood can be controlled using the span argument, which ranges between 0 to 1. It controls the degree of smoothing. So, the greater the value of span, the more smooth is the fitted curve.
+
+The predictor variable can just be indices from 1 to the number of observations in the absence of explanatory variables. If other explanatory variables are available, they can be used as well (maximum of 4).
+
+
+# Prepare Function  
+```{r}
+lo.lev <- function(x1, sp){
+  # x1: feature vector of length n
+  # sp: a value for "span"
+  n = length(x1);
+  lev = rep(0, n)
+  
+  ##############################################
+  # YOUR CODE: Compute the diagonal entries of the 
+  #            smoother matrix S and 
+  #            store it in a vector "lev"
+  # Tip: check how we compute the smoother matrix
+  #      for smoothing spline models
+  ##############################################
+  A = matrix(0, n, n);
+  for(i in 1:n){
+       y = rep(0, n); y[i]=1;
+       yi = loess(y ~ x1, span=sp, control = loess.control(surface = "direct"))$fitted;
+       A[,i]= yi;
+  }
+ 
+  return(diag((A+t(A))/2))
+}
+
+onestep_CV <- function(x1, y1, sp){
+  
+  ##############################################
+  #  YOUR CODE: 
+  #  1) Fit a loess model y1 ~ x1 with span = sp, and extract 
+  #     the corresponding residual vector
+  #  2) Call lo.lev to obtain the diagonal entries of S
+  #  3) Compute LOO-CV and GCV using formula from lecture notes
+  #    [lec_W5_NonlinearRegression.pdf] page 33. 
+  ##############################################
+  lofit = loess(y1 ~ x1, span = sp, control = loess.control(surface = "direct"))
+  resid = lofit$residuals
+  lev = lo.lev(x1, sp)
+
+  cv = sum(((resid)/(1-lev))^2)/lofit$n
+  gcv = sum(((resid)/(1-sum(lev)/lofit$n))^2)/lofit$n
+  
+  return(list(cv = cv, gcv = gcv))
+}
+
+myCV <- function(x1, y1, span){
+  # x1: feature vector of length n
+  # y1: response vector of length n
+  # span: a sequence of values for "span"
+  
+  m = length(span)
+  cv = rep(0, m)
+  gcv = rep(0, m)
+  
+  for(i in 1:m){
+    tmp = onestep_CV(x1, y1, span[i])
+    cv[i] = tmp$cv
+    gcv[i] = tmp$gcv
+  }
+  return(list(cv = cv, gcv = gcv))
+}
+```  
+
+
+# Test Function
+
+Test function with data loaded from disk  
+```{r}
+mydata = read.csv(file = "Coding3_Data.csv")
+dim(mydata)
+```  
+
+
+Take a look at the plot of the data  
+```{r}
+plot(mydata$x, mydata$y, xlab = '', ylab = '')
+```  
+
+
+Create a grid of values for span:  15 values equally spaced between 0.20 and 0.90  
+```{r}
+span1 = seq(from=0.2, by=0.05, length=15)
+cv.out = myCV(mydata$x, mydata$y, span1)
+myout = data.frame(CV = cv.out$cv, GCV = cv.out$gcv, span = span1)
+```  
+
+# Results  
+Compute LOO-CV and GCV using function above  
+```{r}
+myout
+```  
+
+Find value for span that creates lowest RSS for both GCV  
+```{r}
+(msgcv = myout$span[myout$GCV == min(myout$GCV)])
+```  
+
+
+and LOO-CV
+```{r}
+(mscv = myout$span[myout$CV == min(myout$CV)])
+```  
+
+
+# Plot the fitted curve  
+Show the data (red circles), the true curve (grey line), and the fitted curve (blue dashed line) using optimal span.  
+```{r}
+#Plot data with min GCV value
+spangcv.min = msgcv
+plot(mydata$x, mydata$y, xlab='', ylab='', col='red')
+
+#Plot true curve 
+fx = 1:50/50
+fy = sin(12*(fx+0.2))/(fx+0.2)
+lines(fx, fy, col='grey', lwd=2)
+
+f = loess(y ~ x, data=mydata, span=spangcv.min)
+lines(fx, predict(f, data.frame(x=fx), surface='direct'), lty=2, lwd=2, col='blue')
+```   
+
+
+
+
+
+
+
+
+

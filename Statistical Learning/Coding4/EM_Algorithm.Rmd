@@ -1,0 +1,216 @@
+---
+title: "Expectation Maximization (EM) Algorithm"
+output:    
+  html_document:
+      toc: true
+      toc_float: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#### Eric Ellwanger
+
+Load required packages
+```{r message=FALSE, warning=FALSE}
+mypackages = c("mclust")   
+tmp = setdiff(mypackages, rownames(installed.packages())) 
+if (length(tmp) > 0) install.packages(tmp)
+
+library(mclust)
+```
+
+## EM algorithm derivation  
+The EM algorithm is an iterative algorithm used to help solve difficult maximum likelihood estimation (MLE) problems. It estimates the posterior probability of the class labels and then uses this information to iteratively refine the $\theta$ - in this exercise $(\mu_1, \mu_2, \Sigma,$ and $\pi_k)$
+
+We look at the Gaussian Mixture Model (GMM), which is a mixture model that uses a combination of Gaussian (Normal) probability distributions. The EM algorithm is used to estimate the means and covariance matrix parameters for each mixture.
+
+\[p(x|\theta) = \sum_{k=1}^{K} \pi_k\mathcal{N}(x|\mu,\,\Sigma_k)\]  
+\[where \hspace{2mm}\theta = \{\pi_k, \mu_k, \Sigma\}\hspace{9mm} \text{(In this example we use a single covariance matrix)} \] 
+
+$\pi_k$ represents the mixing weights of the different classes where $0\leq \pi_k \leq 1$ and $\sum_{k=1}^{K}\pi_k = 1$  
+$\mu_k$ represents the mean for each class, and  
+$\Sigma$ represents the covariance matrix
+
+The log likelihodd function of the GMM can be shown as
+
+\[\ell(\theta)=\sum_{n} log \sum_{k=1}^{K}\pi_k\mathcal{N}(x|\mu_k,\,\Sigma)\]
+
+Differentiating this causes an issue due to the sum inside of the log. But, if we add a latent indicator variable $z_n$ to represent which class the observation $x_n$ belongs to and estimate the $z_n's$, we can use the EM algorithm to find a local maximum to the complete log likelihood. 
+
+\[\ell(\theta)=\sum_{n} log \sum_{z_n=1}^{K}\pi(z_n)\mathcal{N}(x_n|z_n,\mu(z_n),\,\Sigma(z_n))\]
+
+The EM algorithm can be described as   
+$\hspace{10mm}$Step 1: Initialize $\theta = (\mu_k, \Sigma, \pi_k)$    
+$\hspace{10mm}$Step 2: Repeat until $\ell(\theta)$ stops changing or until certain number of iterations   
+$\hspace{15mm}$(a) Estimation   (E)step: compute $p(z_n|x_n,\theta^{old})$     
+$\hspace{15mm}$(b) Maximization (M)step: compute $\theta^{new} = \displaystyle\arg\max_{\theta}\sum_{n}\sum_{z_n}p(z_n|x_n,\theta^{old})logp(x_n,z_n|\theta)$    
+$\hspace{15mm}$(c) compute log likelihood: $\ell(\theta) = log\sum_{n}\sum_{z_n}p(z_n,x_n|\theta)$  
+    
+The (E)step computation:  
+
+Compute the posterior distribution of $z_k$ given the observations and the initial parameters (or estimates from the Mstep) of $\hat\pi_k, \hat\mu_k, \hat\Sigma$    
+\[p(z_n=k|x_n,\theta^{old})=\hat\gamma_{nk}=\frac{\hat\pi_k\mathcal{N}(x_n|\hat\mu_k,\hat\Sigma)}{\sum_{j}\hat\pi_j\mathcal{N}(x_n|\hat\mu_j,\hat\Sigma)} \]  
+
+Where  
+
+\[\mathcal{N}(x; \mu, \Sigma) = \frac{1}{(\sqrt{2 \pi})^2} \frac{1}{| \Sigma|^{1/2}} e^{ - \frac{1}{2}(x - \mu)^t \Sigma^{-1} (x- \mu)}\]  
+
+So in the 2 component case this can be estimated by:
+
+\[\log B_1 = \log \frac{\hat\pi_2 \mathcal{N}(x; \mu_2, \Sigma)}{\hat\pi_1 \mathcal{N}(x; \mu_1, \Sigma)} = \log \frac{\hat\pi_2}{\hat\pi_1} + \frac{1}{2} (x - \hat\mu_1)^t \hat\Sigma^{-1} (x- \hat\mu_1) -  \frac{1}{2} (x - \hat\mu_2)^t \hat\Sigma^{-1} (x- \hat\mu_2)\]  
+
+\[\log B_2 = \log \frac{\hat\pi_1 \mathcal{N}(x; \mu_2, \Sigma)}{\hat\pi_2 \mathcal{N}(x; \mu_1, \Sigma)} = \log \frac{\hat\pi_1}{\hat\pi_2} + \frac{1}{2} (x - \hat\mu_2)^t \hat\Sigma^{-1} (x- \hat\mu_2) -  \frac{1}{2} (x - \hat\mu_1)^t \hat\Sigma^{-1} (x- \hat\mu_1)\]  
+
+
+so that  
+
+\[\hat\gamma_{n1} = \frac{1}{1 + e^{B_1}}\] 
+
+\[\hat\gamma_{n2} = \frac{1}{1 + e^{B_2}}\] 
+
+
+
+The (M)step computation:   
+
+Now, if we make the assumption that $\gamma_{nk}$ doesn't depend on $\mu_k$, we can rewrite the derivative of the log-likelihood with respect to $\mu_k$ and set it to 0 and solve for $\mu_k$ as follows:   
+\[\hat\mu_k = \frac{\sum_{n=1}^{N}\hat\gamma_{nk}x_n}{\sum_{n=1}^{N}\hat\gamma_{nk}}\]  
+
+$\hat\mu_k$ is basically a weighted average of the data with weight $\hat\gamma_{nk}$  
+
+Similarly we can find $\hat\Sigma$ and $\hat\pi$:  
+
+In this example we use a single covariance matrix so it simplifies to:  
+\[\hat{\Sigma} = \frac{\sum_{k=1}^{K}\sum_{n=1}^{N}\hat\gamma_{nk}(x_n-\hat\mu_k)(x_n-\hat\mu_k)^T}{\sum_{k=1}^{K}\sum_{n=1}^{N}\hat\gamma_{nk}} \]  
+
+\[\hat\pi_k = \frac{\sum_{n=1}^{N}\hat\gamma_{nk}}{N}\]  
+
+The EM algorithm is gaurenteed to only find a local maximum, so the algirithm should be run multiple times with different starting parameters to insure a global maximum.  
+
+
+## Define the EM function  
+This function performs the E-step, the M-step, and then iteratively call these two functions in myEM.
+```{r}
+Estep <- function(data, G, para){
+  g = matrix(rep(0, G*nrow(data)), nrow=nrow(data), ncol=G)
+  for (i in 1:nrow(data)) {
+    b1 = (as.matrix(data[i,]-para$mean[,1])) %*% solve(para$Sigma) %*% as.matrix(t(data[i,]-para$mean[,1])) 
+    b2 = (as.matrix(data[i,]-para$mean[,2])) %*% solve(para$Sigma) %*% as.matrix(t(data[i,]-para$mean[,2]))
+   
+    c1 = log(para$prob[2]/para$prob[1]) + 0.5*b1 - 0.5*b2
+    c2 = log(para$prob[1]/para$prob[2]) + 0.5*b2 - 0.5*b1
+    
+    g[i,1] = 1/(1+exp(c1))
+    g[i,2] = 1/(1+exp(c2))
+  }  
+  
+  post.prob = g
+  
+  # Return the n-by-G probability matrix
+  return(post.prob)
+  }
+
+Mstep <- function(data, G, para, post.prob){ 
+  # mixing weight (pi, 1-pi)
+  prob = apply(post.prob, 2, mean)
+
+  # mu_1, mu_2
+  newMean = matrix(rep(0, G*G), nrow=2)
+  for (k in 1:G) {
+    newMean[,k] = apply(post.prob[,k]*data, 2, sum)/sum(post.prob[,k])
+  }
+  rownames(newMean) = colnames(data)
+  
+  #Covariance matrix
+  s = matrix(rep(0, G*G), nrow = G)
+  for (k in 1:G) {
+    for(n in 1:nrow(data)) {
+      a = as.matrix(data[n,] - newMean[,k])
+      a_squared = t(a) %*% a
+      s = s + (post.prob[n,k] * a_squared)
+    }
+  }  
+  s = s/sum(apply(post.prob, 2, sum))
+  
+  para = list('prob' = prob, 'mean' = newMean, 'Sigma' = s)
+  
+  # Return the updated parameters
+  return(para)
+}
+
+myEM <- function(data, itmax, G, para){
+  # itmax: num of iterations
+  # G:     num of components
+  # para:  list of parameters (prob, mean, Sigma)
+  for(t in 1:itmax){
+    post.prob = Estep(data, G, para)
+    para = Mstep(data, G, para, post.prob)
+  }
+  
+  return(para)
+}
+```
+
+
+
+## Load Data   
+Load the faithful dataset 
+```{r}
+dim(faithful)
+```  
+
+
+```{r}
+head(faithful)
+```  
+
+
+```{r}
+n = nrow(faithful)
+```
+
+
+
+## Initialization
+```{r}
+#Last 4 digits of my UIN - 6950
+set.seed(6950)
+
+#Initialize n x k matrix to 0's
+Z=matrix(0, n, 2); 
+
+#randomaly assign rows of Z to 1 group
+Z[sample(1:n, 120), 1] <- 1
+Z[, 2] <- 1 - Z[, 1]
+
+# A little cheat, we get the inital values from the mstep function in the mclust package
+ini0 <- mstep(modelName='EEE', faithful, Z)$parameters
+
+```
+
+Here are the initial values we will use (prob, mean, Sigma)  
+```{r}
+(para0 = list(prob = ini0$pro, mean = ini0$mean, Sigma = ini0$variance$Sigma))
+
+```  
+
+
+## Compare Results  
+
+Output from myEM  
+```{r}
+myEM(data=faithful, itmax=10, G=2, para=para0)
+```  
+
+
+Compare the output from the above algorithm to that of the em function from the mclust package
+```{r}
+Rout = em(modelName='EEE', data=faithful, control=emControl(eps=0,tol=0,itmax=10),
+          parameters=ini0)$parameters
+
+list(Rout$pro, Rout$mean, Rout$variance$Sigma)
+```
+
+
+
