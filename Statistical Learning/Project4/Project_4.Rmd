@@ -1,0 +1,452 @@
+---
+title: 'Movielense Data: Recommender System'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+  html_notebook:
+    theme: readable
+    toc: yes
+    toc_float: yes
+date: "CS598, Fall 2020"
+---
+
+# Set Up
+Set up R chunk options and install all the needed packages. Also load the needed libraries.  
+```{r setup, include=TRUE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+rm(list = ls())
+WD = getwd()
+setwd(WD)
+
+# Required Packages for the assignment
+req_packages = c("recommenderlab", "Matrix", "data.table", "slam",  "tidyverse") 
+# Find packages that needs to be installed
+needs_install_packages = setdiff(req_packages, rownames(installed.packages()))
+#Install packages if needed
+if(length(needs_install_packages)>0) install.packages(needs_install_packages)
+#Load all the required package libraries
+libs_loaded = lapply(req_packages, require, character.only = TRUE)
+
+
+```   
+
+
+# Read in Data   
+```{r}
+myurl = "https://liangfgithub.github.io/MovieData/"
+
+ratings = read.csv(paste0(myurl, 'ratings.dat?raw=true'), 
+                   sep = ':',
+                   colClasses = c('integer', 'NULL'), 
+                   header = FALSE)
+colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+ratings$Timestamp = NULL
+```
+
+```{r}
+movies = readLines(paste0(myurl, 'movies.dat?raw=true'))
+movies = strsplit(movies, split = "::", fixed = TRUE, useBytes = TRUE)
+movies = matrix(unlist(movies), ncol = 3, byrow = TRUE)
+movies = data.frame(movies, stringsAsFactors = FALSE)
+colnames(movies) = c('MovieID', 'Title', 'Genres')
+movies$MovieID = as.integer(movies$MovieID)
+movies$Title = iconv(movies$Title, "latin1", "UTF-8")
+movies$Year = as.numeric(unlist(lapply(movies$Title, 
+                                       function(x) substr(x, nchar(x)-4, nchar(x)-1))))
+
+small_image_url = "https://liangfgithub.github.io/MovieImages/"
+movies$image_url = sapply(movies$MovieID, 
+                          function(x) paste0(small_image_url, x, '.jpg?raw=true'))
+
+#Load Users
+#users = read.csv(paste0(data_url, 'users.dat?raw=true'),
+#                 sep = ':', header = FALSE)
+#users = users[, -c(2,4,6,8)] # skip columns
+#colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
+
+```
+
+
+# Data Analysis
+
+Let's perform some exploratory data analysis.
+
+## Missing Data
+
+Now Let's inspect the data and see what are missing movies, users or ratings
+```{r}
+#no of movies which are rated but missing from movies data
+ratings_not_in_movies = ratings %>%
+    filter(!(MovieID %in% movies$MovieID))
+dim(ratings_not_in_movies)
+
+#No of movies not rated
+movies_not_rated = movies %>% 
+  filter(!(MovieID %in% ratings$MovieID))
+dim(movies_not_rated)
+
+
+#no of users who have not rated any movie
+users_with_no_ratings = users %>%
+        filter(!(UserID %in% ratings$UserID))
+dim(users_with_no_ratings)
+```
+We can see that there all the movies which are rated, is present in the `movies` data, but we have `r dim(movies_not_rated)[1]` movies, which are **not rated**. All the user have done some movies rating.
+
+## Ratings Disribution
+
+We are using the package `recommenderlab` to create **sparse rating matrix** and perform some exploratory data analysis on movie ratings.
+We will load the ratings data into a `realRatingMatrix` object and we will inspect the dimension, sparsity and rating distributions.
+
+```{r cache=TRUE}
+#Drop the timestamp column and take first 3 columns, which makes ratings data frame as tuple of user, movie and rating
+usr_item_rate = ratings[, 1:3]
+ratemat = as(usr_item_rate, "realRatingMatrix")
+#show the dimensions of created real rating matrix 
+#getRatingMatrix(ratemat)
+dim(ratemat)
+
+#Now let's visualize the Rating matrix to see the sparsity and rating variations
+image(ratemat, main = "User Movie Ratings")
+#Now see the histogram of ratings to see the distribution
+hist(getRatings(ratemat),  main = "Histogram of Ratings", xlab = "Ratings", col = "steelblue")
+```
+
+Here, we can see that *image plot* of rating matrix show some **patched dark rows** between users 3000-4000, which indicates some **user bias** towards high ratings. We can also see some some **patched white rows** between users 2000-3000, which indicates some **user bias** towards low ratings. Any dark patched row, which represents bias towards high ratings and white patch represents the bias towards low rating.This can further visualized by the histogram of ratings, which shows **right skewed histogram**, with more ratings for 3, 4 and 5 and less ratings for 1 and 2.
+
+### Ratings Normalization
+
+To address this bias, we will normalize the rating matrix. We are using the **Z-score** based normalization which will center and scale each user's rating(row) by *subtracting it's means and then divide by standard deviation*. Let's inspect the distributions after normalization.
+
+```{r cache= TRUE}
+#Now normalize the rating matrix to remove some user's bias towards extremely high or low ratings
+ratemat = normalize(ratemat, method="Z-score")
+
+#Now again see the sparsity, rating variations and histogram of normalized ratings to see the distribution
+image(ratemat)
+hist(getRatings(ratemat),  main = "Histogram of Ratings", xlab = "Ratings", col = "steelblue")
+```
+
+we can see from the normalized rating image plot that, the **patched rows has faded away** and  there are uniform ratings for all the users and movies combination. We can also see from histogram that now rating mean is centered to 0 and its much **less skewed** and appears more like normal distribution.
+
+
+
+Now we can see the distribution of *ratings per user* and distribution of *ratings per movie*
+
+```{r }
+par(mfrow =c(1, 2))
+hist(rowCounts(ratemat), breaks = 50, main = "Histogram of Ratings per User", xlab = "Ratings per User", col = "steelblue")
+hist(colCounts(ratemat), breaks = 50, main = "Histogram of Ratings per Movie", xlab = "Ratings per Movie", col = "darkorange")
+
+```
+
+We can see that most of users has **under 500** ratings. But some users has even *more than 1500* ratings. Also, most of the movies has **under 1000** ratings but there are many movies which has *more than 2000* ratings.These movies seems **popular movies**.
+
+## Genres Disribution
+
+We can also analyze the distribution of Genres and we will analyze it for *pre-defined 18 genres*
+
+Load the movies and pre-defined genres in a binary 1/0 matrix.
+
+```{r}
+#Load the genres as data frame, parse them and load them as characters
+genres = as.data.frame(movies$Genres, stringsAsFactors=FALSE)
+tmp = as.data.frame(tstrsplit(genres[,1], '[|]',
+                              type.convert=TRUE),
+                    stringsAsFactors=FALSE)
+
+#create a list of pre-defined genres which we will use as columns
+genre_list = c("Action", "Adventure", "Animation", 
+               "Children's", "Comedy", "Crime",
+               "Documentary", "Drama", "Fantasy",
+               "Film-Noir", "Horror", "Musical", 
+               "Mystery", "Romance", "Sci-Fi", 
+               "Thriller", "War", "Western")
+m = length(genre_list)
+
+#create a binary matrix with movies in a row and all the pre-defined genres as columns
+# if movie belongs to one of the pre-defined genere then set the values to 1 otherwise 0.
+genre_matrix = matrix(0, nrow(movies), length(genre_list))
+for(i in 1:nrow(tmp)){
+  genre_matrix[i,genre_list %in% tmp[i,]]=1
+}
+#set the column names to pre-defined genres
+colnames(genre_matrix) = genre_list
+
+# remove the temporary objects
+remove("tmp", "genres")
+
+#Create a data frame of Genre frequencies where movie in row and each genre frequency in columns
+gen_movie_freq_df = data.frame(Genres = genre_list, Freq = as.vector(colMeans(genre_matrix)))
+gen_movie_freq_df = gen_movie_freq_df %>% 
+                  arrange(desc(-Freq))
+# Create a data frame of Genre ratings where row is genre and column is avg number of rating(Popularity) for this genre
+tmp = ratings %>% 
+  left_join(data.frame(MovieID = movies$MovieID, genre_matrix), 
+            by = "MovieID") %>%
+  select(-c("UserID", "MovieID", "Rating", "Timestamp"))
+gen_rate_freq_df = data.frame(Genres = genre_list, 
+                 Popularity = as.vector(colMeans(tmp)))
+gen_rate_freq_df = gen_rate_freq_df %>%
+                       arrange(desc(-Popularity)) 
+
+# Let's plot the histogram of Genres based on % of movies(Popular) and Avg Ratings(Top Rated)
+par(mfrow = c(1, 2), mar = c(4, 8, 4, 4))
+barplot(gen_movie_freq_df$Freq, names.arg = gen_movie_freq_df$Genres, horiz = TRUE, las = 1,
+        main = "Genre distribution(% of movies)", xlab = "Frequency", col = "steelblue")
+barplot(gen_rate_freq_df$Popularity, names.arg = gen_rate_freq_df$Genres, horiz = TRUE, las = 1,
+        main = "Genre distribution(% Popularity)", xlab = "Popularity", col = "darkorange")
+```
+
+Based on above to bar charts we can see that **Top 4 Genres(Comedy, Drama, Action, Thriller)** are having **most popularity** and **most no of movies**. 
+More than *70% of movies belong to just 2 Genres(Drama & Comedy) and they are most popular Genres too*.
+
+
+
+# System I
+
+*Recommendation system based on genres*  
+
+Collaborative filtering approaches that use user rating information can be effective. However, they can fail due to the fact that they require initial user information to make recommendations - known as the 'cold start' problem. One method to overcome this is to use content based filtering. One method is to use genre information provided by movie experts and directors. Such a system can make recommendations for a particular genre(s) of movie that the user indicated that they like.  
+
+For this report we look at two such recommendation sysems. The first uses the ratings of other users to find the most highly rated movies for a selected genre. The second uses the number of ratings to find the most popular movies for a selected genre. While this sounds fairly simple, there is the issue of how to define 'highly rated' and 'most popular'.  
+
+For the first system - most highly rated - there is the problem of defining what highly rated means. There are varying numbers of ratings available for movies - ranging from 1 rating to 3,428 ratings per movie.  
+```{r message=FALSE, warning=FALSE}
+tempratings = ratings %>%
+  group_by(MovieID) %>%
+  summarize(ratings_per_movie = n(), ave_ratings = mean(Rating)) %>%
+  inner_join(movies, by='MovieID')
+summary(tempratings$ratings_per_movie)
+```
+
+Should a movie with 1 5 rating be more highly rated than a movie with over 500 ratings with an average rating of 4.8? For this report we adopted the IDMB method of calculating movie rankings: 
+
+*weighted rating (WR) = (v ÷ (v+m)) × R + (m ÷ (v+m)) × C*
+
+Where:
+
+R = average rating for the movie (mean)   
+v = number of ratings for the movie   
+m = minimum ratings required to be listed in the Top 10 (set to 3rd quantile - 350)    
+C = the mean rating across the whole report - 3.239
+
+We can see that C - the mean rating across the whole dataset - is about 3.239
+```{r}
+summary(tempratings$ave_ratings)
+```
+
+
+Summarize the ratings list by movie, calculating a new column - weighted.rating - that uses the above formula. The dataset is sorted to put it in descending order according to this new field.
+```{r message=FALSE, warning=FALSE}
+tmpgenre = ratings %>% 
+        group_by(MovieID) %>% 
+        summarize(ratings_per_movie = n(), ave_ratings = mean(Rating)) %>%
+        inner_join(movies, by = 'MovieID') %>%
+        mutate(weighted.rating = (ratings_per_movie/(ratings_per_movie+350))*ave_ratings + (350/(ratings_per_movie+350))*3.239) %>%
+        arrange(desc(weighted.rating))
+```  
+
+Since the tmpgenre list is sorted in descending order, when we select a particular genre, we know that the returned list will be in the order of most highly rated to lowest rated. Here is an axample where we get the top 10 most highly rated movies in the 'Animation' genre.
+```{r}
+tmpgenre[grep('Animation', tmpgenre$Genres), ][1:10,c('Title', 'ratings_per_movie', 'ave_ratings', 'weighted.rating')]
+```
+
+
+For the second system - most popular - there is a similar problem of defining what popular means. There are varying numbers of ratings available for movies - ranging from 1 rating to 3,428 ratings per movie. Should a movie with a 1000 ratings with an average rating of 4.0 be more popular than another movie with only 800 ratings and an average rating of 4.2?  
+
+One method to accomplish this would be to take the 50 movies with the most ratings.
+```{r}
+tmppop = ratings %>% 
+        group_by(MovieID) %>% 
+        summarize(ratings_per_movie = n(), ave_ratings = mean(Rating)) %>%
+        inner_join(movies, by = 'MovieID') 
+        
+tmppop = tmppop[grep('Animation', tmppop$Genres), ]
+
+tmppop = tmppop %>%
+        arrange(desc(ratings_per_movie))
+
+tmppop = tmppop[1:25,]
+
+summary(tmppop$ratings_per_movie)
+m = summary(tmppop$ratings_per_movie)[6]
+tmppop
+```
+
+```{r}
+summary(tmppop$ave_ratings)
+C = summary(tmppop$ave_ratings)[4]
+```
+
+
+
+Then we can use a similar metric as described above for highly rated movies using the mean rating for these 50 movies as C and the max number of ratings as m.
+```{r}
+tmppop = tmppop %>%
+  mutate(weighted.rating = (ratings_per_movie/(ratings_per_movie+m))*ave_ratings + (m/(ratings_per_movie+m))*C) %>%
+  arrange(desc(weighted.rating))
+
+tmppop[1:10,]
+```
+
+```{r}
+d  = pop %>% 
+  group_by(Genres) %>% 
+  slice_max(order_by = ratings_per_movie, n = 50)  
+
+d
+```
+
+
+
+To get the top 10 most popular movies for Animated Films
+```{r}
+#pop[1:10,c('Title', 'ratings_per_movie', 'ave_ratings', 'weighted.rating')]
+d[grep('Animation', d$Genres), ][1:10,c('Title', 'ratings_per_movie', 'ave_ratings', 'weighted.rating')]
+```
+
+
+
+# Training Reccomender System
+
+Train a recommender system using R package `recommenderlab`
+Here we are using the `recommenderlab` package's object `evaluationScheme` to perform the k-fold data preparation and 
+```{r}
+set.seed(6250)
+```
+## Recommender System
+
+* First create a utility matrix stored as a sparse matrix.
+```{r}
+i = paste0('u', ratings$UserID)
+j = paste0('m', ratings$MovieID)
+x = ratings$Rating
+tmp = data.frame(i, j, x, stringsAsFactors = T)
+Rmat = sparseMatrix(as.integer(tmp$i), as.integer(tmp$j), x = tmp$x)
+rownames(Rmat) = levels(tmp$i)
+colnames(Rmat) = levels(tmp$j)
+Rmat = new('realRatingMatrix', data = Rmat)
+```
+
+
+`Rmat` is a 6040-by-3706 sparse matrix. Its rows correspond to the unique 6040 users in the training data, and columns correspond to the unique 3685 movies  in the training data (although the MovieIDs range from 1 to 3952).
+```{r}
+#Rows are unique users, Columns are unique movies - sparse matrix
+dim(Rmat)
+```  
+
+```{r}
+#Number Unique Movies
+range(train$MovieID)
+length(unique(train$MovieID))
+```  
+
+
+```{r}
+#Number of unique users
+range(train$UserID)
+length(unique(train$UserID))
+```
+
+
+
+# Training Reccomender System
+
+Train a recommender system using R package `recommenderlab`
+Here we are using the `recommenderlab` package's object `evaluationScheme` to perform the k-fold data preparation and 
+
+*Create an evaluation scheme and 2 recommender models for this data* 
+
+The scheme for both models will use 10 fold cross validation. Because each fold will be 1/10 of the data, we can see the proportion of the data used for train is 0.9. and the proportion used for test is 0.1 with that being evenly distributed between the known and unknown sets.
+```{r}
+#Evaluation scheme to be used for different models
+e = evaluationScheme(Rmat, method='cross-validation', k=10, given=15)
+
+#Proportion of data used for training
+nrow(getData(e, "train")) / nrow(Rmat)
+```  
+
+and the proportion used for test is 0.1 with each of the known and unknown sets being the same size with the exception of the ratings entries.
+```{r}
+#Proportion of data used in the test data
+nrow(getData(e, "known")) / nrow(Rmat)
+
+#The test data has 2 equally sized matrixes - known and unknown - known has 
+getData(e, "known")
+
+#And unknown has
+getData(e, "unknown")
+```
+
+
+
+*Instantiate the recommendation models.*
+```{r}
+ubcf_params = list(method = "cosine", nn = 30, normalize = "Z-score")
+r1 = Recommender(getData(e, 'train'), 'UBCF', parameter = ubcf_params)
+
+ibcf_params = list(method = "cosine", normalize = "Z-score")
+r2 = Recommender(getData(e, 'train'), 'IBCF', parameter = ibcf_params)
+
+svdf_parms = list(list(normalize='Z-score'))
+r3 = Recommender(getData(e, 'train'), 'SVDF', parameter = svdf_parms)
+
+pop_parms = list(normalize='Z-score')
+r4 = Recommender(getData(e, 'train'), 'POPULAR', parameter = pop_parms)
+```
+
+
+
+
+
+*Compute predicted ratings for the known part of the data*  
+```{r}
+p1 = predict(r1, getData(e, 'known'), type='ratings')
+p2 = predict(r2, getData(e, 'known'), type='ratings')
+p3 = predict(r3, getData(e, 'known'), type='ratings')
+p4 = predict(r4, getData(e, 'known'), type='ratings')
+```
+
+
+
+*Calculate the error between the prediction and the unknown part of test data*
+```{r}
+error = rbind(
+  UBCF = calcPredictionAccuracy(p1, getData(e, 'unknown')),
+  IBCF = calcPredictionAccuracy(p2, getData(e, 'unknown')),
+  SVDF = calcPredictionAccuracy(p3, getData(e, 'unknown')),
+  POP =  calcPredictionAccuracy(p4, getData(e, 'unknown'))
+)
+
+error
+```
+
+
+## Model evaluation 
+
+```{r cache=TRUE}
+revalScheme = evaluationScheme(data = ratemat, method = "cross-validation", k = 10, given = 15, goodRating = 3)
+
+algorithms = list(
+  UBCF = list(name = "UBCF", params = ubcf_params),
+  IBCF = list(name = "IBCF", params = ibcf_params),
+  SVDF = list(name = "SVDF", params = svdf_params),
+  POP  = list(name = 'POPULAR', params = pop_parms)
+  )
+evalResults = evaluate(revalScheme, method=algorithms, type = "ratings")
+plot(evalResults, ylim = c(0,100))
+```
+
+
+# Acknowledgements & References
+
+- [PSL:Fall20:Project 4:Movie Reccomendation Description](https://piazza.com/class/kdf6l5f8bb78j?cid=868)
+- [PSL:Piazza Poject 4 FAQs](https://piazza.com/class/kdf6l5f8bb78j?cid=15)
+- [Movielense Data: Exploratory Data Analysis](https://liangfgithub.github.io/Rcode_W13_Movie_EDA.nb.html)
+- [Movielense Data: Recommender System](https://liangfgithub.github.io/Rcode_W13_Movie_RS.nb.html)
+- [recommenderlab package documentation](https://cran.r-project.org/web/packages/recommenderlab/vignettes/recommenderlab.pdf)
+- [Shiny Dashboard](https://rstudio.github.io/shinydashboard/get_started.html)
+- [Shiny Tutorials](https://shiny.rstudio.com/tutorial/)
+- [Book Recommender Example](https://github.com/pspachtholz/BookRecommender)

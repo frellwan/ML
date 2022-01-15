@@ -1,0 +1,13 @@
+name: Project4
+title: Project4
+username:
+account: fre2
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3358771
+bundleId: 3948480
+url: https://fre2.shinyapps.io/Project4/
+when: 1607208525.75757
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Rcode_W13_Movie_EDA.Rmd|Rcode_W13_Movie_RS.html|Rcode_W13_Movie_RS.nb.html|Rcode_W13_Movie_RS.Rmd|functions/helpers.R
