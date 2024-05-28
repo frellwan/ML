@@ -1,3 +1,3 @@
 # ML
 
-Several Machine Learning source from coursework at University of Illinois while pursuing my Masters Computer Science - Data Science concentration
+Several Machine Learning courses from my Masters Computer Science - Data Science concentration coursework at University of Illinois.
