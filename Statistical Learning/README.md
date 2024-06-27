@@ -1,5 +1,8 @@
 # Statistacal Learning
 This course provides an introduction to modern techniques for statistical analysis of complex and massive data. Examples of these are model selection for regression/classification, nonparametric models including splines and kernel models, regularization, model ensemble, recommender system, and clustering analysis. Learn applications as well as computation and theoretical foundations.
 
+## Coding 1 - Classification algorithm evaluation
+This coding evaluates the performance of various classification models — linear regression, quadratic regression, k-nearest neighbors (kNN), and Bayes rule — on a synthetic dataset generated from mixtures of bivariate Gaussian distributions. The dataset is split into training and test sets, and the misclassification rates for each model are calculated and compared. The kNN model's optimal k is determined via 10-fold cross-validation. The script iterates this process 20 times to assess model robustness, presenting the results through detailed plots and statistical summaries.
+
 ## Coding 2 - Lasso Regression
 This coding demonstrates the implementation of Lasso regression using the Coordinate Descent algorithm on the Boston housing dataset. It includes data preparation, transformation, and a custom function (MyLasso) to compute Lasso coefficients. The results are validated by comparing the custom implementation with the glmnet package, ensuring accuracy. Key steps involve loading data, transforming variables, and iteratively updating coefficients. The provided R code highlights efficient computation and comparison techniques for Lasso regression.
