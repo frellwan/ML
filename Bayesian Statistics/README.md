@@ -1,0 +1,2 @@
+# Advanced Bayseian Modeling
+Course Description Welcome to STAT 578: Advanced Bayesian Modeling! This course explores practical methods and models for Bayesian data analysis. The major topics include Bayesian fundamentals, prior selection, posterior inference tools, hierarchical models, methods of Bayesian computation, model evaluation, and ordinary and generalized regression models. In particular, there will be an emphasis on computational implementation.
