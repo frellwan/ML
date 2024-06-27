@@ -15,3 +15,6 @@ This coding demonstrates the implementation of the Expectation Maximization (EM)
 
 ## Project 1 - Home Price Predictions
 This project analyzes and models the AMES Housing dataset, which contains 2,930 records and 83 variables describing house characteristics. The primary goal is to predict house sale prices using various modeling techniques. Initial preprocessing involved handles missing values and converting categorical variables into binary columns. Two main modeling approaches were employed: boosting tree methods using the xgboost package, and elastic net regression using the glmnet package. Both models' performances are evaluated across multiple train/test splits. The project concludes with a comparison of the error rates and observations on model performance.
+
+## Project 2 - Weekly Sales Predictions
+This project processes and evaluates a machine learning model for predicting weekly sales using time-series data. It first loads necessary libraries and sources an external script containing the prediction function. The script reads training and test datasets and iteratively performs 10-fold cross-validation. For each fold, it reads specific fold data, generates predictions, and computes the Weighted Mean Absolute Error (WMAE) based on holiday weighting. The script outputs the WMAE for each fold and the mean WMAE, alongside the total execution time.
