@@ -9,3 +9,6 @@ This coding demonstrates the implementation of Lasso regression using the Coordi
 
 ## Coding 3 - Local Regression 
 This coding explores the application of Loess (Local Regression) for non-parametric smoothing and prediction. The primary functions include lo.lev to compute the diagonal entries of the smoother matrix, onestep_CV to fit a Loess model and calculate Leave-One-Out Cross-Validation (LOO-CV) and Generalized Cross-Validation (GCV) errors, and myCV to evaluate these metrics over a range of span values. The script tests these functions on data loaded from a CSV file, identifying the optimal span that minimizes RSS for both GCV and LOO-CV, and plots the fitted curve using the optimal span.
+
+## Coding 4 - Expectation Maximization
+This coding demonstrates the implementation of the Expectation Maximization (EM) algorithm for estimating parameters of a Gaussian Mixture Model (GMM). It starts with loading necessary packages and introduces the EM algorithm's theory, which iteratively improves parameter estimates for mixtures of Gaussian distributions. The code includes functions for the E-step (computing posterior probabilities) and M-step (updating parameters) and an myEM function to iteratively apply these steps. The algorithm is tested using the faithful dataset, with initial parameters derived from the mclust package for comparison.
