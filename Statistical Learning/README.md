@@ -18,3 +18,7 @@ This project analyzes and models the AMES Housing dataset, which contains 2,930 
 
 ## Project 2 - Weekly Sales Predictions
 This project processes and evaluates a machine learning model for predicting weekly sales using time-series data. It first loads necessary libraries and sources an external script containing the prediction function. The script reads training and test datasets and iteratively performs 10-fold cross-validation. For each fold, it reads specific fold data, generates predictions, and computes the Weighted Mean Absolute Error (WMAE) based on holiday weighting. The script outputs the WMAE for each fold and the mean WMAE, alongside the total execution time.
+
+## Project 3 - Movie Review Sentiment
+This project focuses on building a binary classifier to predict whether a movie review is positive or negative using a dataset of 50,000 IMDb reviews. The dataset is divided into five splits of training and test data, with reviews rated from 1-4 as negative and 7-10 as positive. A logistic regression model with a ridge penalty term is employed, utilizing the bag-of-words approach and the text2vec package in R. The model achieves an AUC greater than 0.96 for all splits, demonstrating high accuracy in classifying review sentiments.
+ 
