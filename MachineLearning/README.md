@@ -38,3 +38,10 @@ Find topics and frequently used words in a vocabulary dataset using expectation 
 Use expectation maximization on a guassian mixture model for image segmentation based on several different numbers for segments.
 
 ### Week 12
+Use a boltzman mean field approximation to classify MNIST images with noise added to them. Look at various hyperparameter values to improve the classification performance.
+
+### Week 13
+Develop a pytorch model using convulutional nueral network (CNN) layers to build a classifier for the CIFAR data set.
+
+### Week 14
+Design a denoising autoencoder using pytorch for the MNIST dataset that will use the first 5 principal components to to classify images. The variational autoencoder will learn the mean and standard deviation of the categories to generate images for each category.
