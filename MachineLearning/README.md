@@ -11,7 +11,21 @@ Demonstrate the vectorized math of numpy
 Write a Naive Bayes classifier from scratch for the UC IRvine Diabetes dataset and compare to the sklearn implementation. Use SVMlight to see if a support vector machine performs better than a Naive Bayes classifier.
 
 ### Week 3
-Compare multiple models (Naive Bayes Classifier with Gaussian or Bernoulli distributions and a Decision Forest) for the MNIST dataset. Thios compares pereprocessing the images vs no preprocessing as well.
+Compare multiple models (Naive Bayes Classifier with Gaussian or Bernoulli distributions and a Decision Forest) for the MNIST dataset. This compares pereprocessing the images vs. no preprocessing as well.
 
 ### Week 4
-Using the UC Irvine banknote dataset, train a support vector machine using stochastic gradient decent.
+Using the UC Irvine banknote dataset, train a support vector machine using stochastic gradient decent from scratch comparing ridge, and lasso regularization (using several values of the regularization coefficient lambda) using hinge loss.
+
+### Week 5
+Use Principle Coordinate Analysis and principle component analysis to visualize the 2D difference between classes in the CIFAR10 dataset.
+
+### Week 6
+Use agglomorative clustering using single linkage, complete linkage, and group average linkage to analyze the European employment in 1979 dataset. Also look at K-means clustering and analyze the number of groups using the elbow plot and the silhouiette score.
+
+### Week 7
+Use a Random Forest claassification model for the activities of daily life dataset from the UC Irvine that has a series of acceleration readings for x, y, and z axis for 14 differnet actvities by quantizing the activity data and developoing features using k-means clustering. Use hyperparameter tuning to improve the model performance.
+
+### Week 8
+Use severral data sets to demonstrate various regression models including linear regression, polynomial regression, and the effect ridge and lasso regularization methods. 
+
+### Week 9
