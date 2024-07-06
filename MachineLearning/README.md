@@ -26,6 +26,9 @@ Use agglomorative clustering using single linkage, complete linkage, and group a
 Use a Random Forest claassification model for the activities of daily life dataset from the UC Irvine that has a series of acceleration readings for x, y, and z axis for 14 differnet actvities by quantizing the activity data and developoing features using k-means clustering. Use hyperparameter tuning to improve the model performance.
 
 ### Week 8
-Use severral data sets to demonstrate various regression models including linear regression, polynomial regression, and the effect ridge and lasso regularization methods. 
+Use several data sets to demonstrate various regression models including linear regression, polynomial regression, and the effect ridge and lasso regularization methods. 
 
 ### Week 9
+Compare lasso, ridge, and elastic net regularization for both linear and logistic regression models. Also investigate the effect of box-cox transformation on the effect on a non normal distributed dataset.
+
+### Week 10
