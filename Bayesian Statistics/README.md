@@ -17,6 +17,6 @@ A Bayesian analysis of a linear regression model applied to predict transistor c
 Analysis of ozone air quality data using Bayesian statistical methods. It includes the preparation of data, model setup using the JAGS (Just Another Gibbs Sampler) library in R, and the application of a Bayesian hierarchical model. The assignment involves setting overdispersed starting points for the parameters, running the model, and performing convergence diagnostics. There is also a summary of the results, including the empirical mean, standard deviation, and posterior credible intervals for the model parameters.
 
 ## HW6 -
-
+Run MCMC simulations using JAGS for various statistical models, including Poisson and Gaussian models. Includes model compilation, checking convergence, plotting results, and interpreting the posterior distributions and Bayesian factors.
 
 ## Paper Presentation
