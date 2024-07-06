@@ -2,13 +2,13 @@
 This course explores practical methods and models for Bayesian data analysis. The major topics include Bayesian fundamentals, prior selection, posterior inference tools, hierarchical models, methods of Bayesian computation, model evaluation, and ordinary and generalized regression models. In particular, there will be an emphasis on computational implementation.
 
 ## HW1 - 
-
+This assignment demonstrates the application of Bayesian methods to real-world scenarios. The analysis provides insights into the posterior distributions and rankings based on different statistical measures.
 
 ## HW2 - 
-
+Exercises focused on Bayesian hierarchical modeling and simulation techniques using JAGS and R. The first exercise involves creating and modifying a directed acyclic graph (DAG), adjusting a JAGS model, and performing posterior estimations for a new study's log-odds ratio. It includes detailed steps for model adjustments, simulations, and statistical summaries. The second exercise addresses Bayesian hierarchical models, specifying improper densities for hyperpriors, and generating graphical and numerical summaries of posterior distributions. The assignment integrates theoretical concepts with practical code implementations, including simulations, posterior predictive checks, and visualizations to reinforce the learning objectives in advanced statistical modeling.
 
 ## HW3 -
-
+Use the Gibbs sampler to simulate posterior distributions for parameters μ and σ^2, and creating autocorrelation plots for these variates. Additionally, it explores the Metropolis algorithm, requiring the adjustment of the proposal variance to achieve a specific acceptance rate. Through R code implementations and statistical analysis, the assignment demonstrates advanced techniques in Bayesian inference, emphasizing practical application and interpretation of results in a statistical context. 
 
 ## HW4 - 
 
