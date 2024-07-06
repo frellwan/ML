@@ -11,7 +11,7 @@ Exercises focused on Bayesian hierarchical modeling and simulation techniques us
 Use the Gibbs sampler to simulate posterior distributions for parameters μ and σ^2, and creating autocorrelation plots for these variates. Additionally, it explores the Metropolis algorithm, requiring the adjustment of the proposal variance to achieve a specific acceptance rate. Through R code implementations and statistical analysis, the assignment demonstrates advanced techniques in Bayesian inference, emphasizing practical application and interpretation of results in a statistical context. 
 
 ## HW4 - 
-
+presents a Bayesian analysis of a linear regression model applied to predict transistor counts over time. The analysis includes model fitting using the JAGS (Just Another Gibbs Sampler) software and checks for convergence using multiple chains with overdispersed starting points. The results are summarized with coda summaries for key parameters (β1, β2, and σ2), providing posterior means and 95% credible intervals. Additional checks for convergence include trace plots, autocorrelation plots, and Gelman-Rubin diagnostics.
 
 ## HW5 -
 
