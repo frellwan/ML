@@ -32,3 +32,9 @@ Use several data sets to demonstrate various regression models including linear 
 Compare lasso, ridge, and elastic net regularization for both linear and logistic regression models. Also investigate the effect of box-cox transformation on the effect on a non normal distributed dataset.
 
 ### Week 10
+Find topics and frequently used words in a vocabulary dataset using expectation maximization based on a multinomial distribution (here we will use 30 topics). 
+
+### Week 11
+Use expectation maximization on a guassian mixture model for image segmentation based on several different numbers for segments.
+
+### Week 12
