@@ -19,4 +19,5 @@ Analysis of ozone air quality data using Bayesian statistical methods. It includ
 ## HW6 -
 Run MCMC simulations using JAGS for various statistical models, including Poisson and Gaussian models. Includes model compilation, checking convergence, plotting results, and interpreting the posterior distributions and Bayesian factors.
 
-## Paper Presentation
+## Data Analysis
+Investigates marijuana use among adolescents from 1976 to 1980. The report highlights the increasing trend of marijuana usage during these years and examines the differences in usage rates between male and female adolescents. The data set comprises 236 individuals with variables indicating gender and marijuana use for each year. Two logistic regression models are presented: the first without individual random effects and the second incorporating random effects. Both models show higher usage rates among males compared to females, with detailed statistical analysis including model convergence, parameter estimates, and predictive probabilities.
